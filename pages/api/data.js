@@ -1,5 +1,3 @@
-// pages/api/data.js
-
 export default async function handler(req, res) {
     const accessToken = process.env.ACCESS_TOKEN;
     const authApiEndpoint = process.env.AUTH_API_ENDPOINT;
@@ -20,17 +18,28 @@ export default async function handler(req, res) {
                 fetchData(performanceApiEndpoint, jwtToken),
             ]);
 
-            // Send back data as JSON response
-            res.setHeader('Content-Type', 'application/json; charset=utf-8');
-            // Manually check and log the response for potential encoding issues            
+            // 过滤 holdings 和 chart 数据
+            const filteredHoldings = (holdingsData?.holdings || []).map(holding => ({
+                symbol: holding.symbol,
+                name: holding.name,
+                netPerformancePercent: holding.netPerformancePercent,
+                allocationInPercentage: holding.allocationInPercentage
+            }));
+
+            const filteredChart = (performanceData?.chart || []).map(item => ({
+                date: item.date,
+                netPerformanceInPercentage: item.netPerformanceInPercentage
+            }));
+
+            // Send back filtered data as JSON response
             const responseBody = JSON.stringify({
-                holdings: holdingsData?.holdings || [],
-                chart: performanceData?.chart || []
+                holdings: filteredHoldings,
+                chart: filteredChart
             });
-            
+
             const encoder = new TextEncoder();
             const encodedResponse = encoder.encode(responseBody);
-            
+
             res.setHeader('Content-Type', 'application/json; charset=utf-8');
             res.status(200).send(Buffer.from(encodedResponse));
         } else {
