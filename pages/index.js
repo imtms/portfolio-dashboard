@@ -59,7 +59,7 @@ export default function Home() {
         {
           data: chart.map((item) => item.netPerformanceInPercentage.toFixed(2)),
           type: "line",
-          smooth: true,
+          smooth: false,
           lineStyle: { color: "#1a73e8", width: 2 },
           areaStyle: {
             color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
