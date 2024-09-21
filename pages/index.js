@@ -11,6 +11,7 @@ export default function Home() {
   const [chart, setChart] = useState([]);
   const [activeTab, setActiveTab] = useState("performance");
   const [isLoading, setIsLoading] = useState(true);
+  const [darkMode, setDarkMode] = useState(false);
 
   const performanceChartRef = useRef(null);
   const stockPieChartRef = useRef(null);
@@ -32,7 +33,28 @@ export default function Home() {
     };
 
     fetchData();
+
+    // Check for system dark mode preference
+    const prefersDarkMode = window.matchMedia(
+      "(prefers-color-scheme: dark)",
+    ).matches;
+    setDarkMode(prefersDarkMode);
+
+    // Add event listener for system dark mode changes
+    const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+    const handleChange = (e) => setDarkMode(e.matches);
+    mediaQuery.addListener(handleChange);
+
+    return () => mediaQuery.removeListener(handleChange);
   }, []);
+
+  useEffect(() => {
+    if (darkMode) {
+      document.body.setAttribute("data-bs-theme", "dark");
+    } else {
+      document.body.removeAttribute("data-bs-theme");
+    }
+  }, [darkMode]);
 
   const renderChart = (chartRef, chartId, option) => {
     const chartDom = document.getElementById(chartId);
@@ -157,6 +179,10 @@ export default function Home() {
     }
   }, [currencyHoldings, activeTab, currencyPieChartOption]);
 
+  const toggleDarkMode = () => {
+    setDarkMode(!darkMode);
+  };
+
   return (
     <>
       <Head>
@@ -166,16 +192,12 @@ export default function Home() {
         <style>{`
           body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: #f0f2f5;
-            color: #333;
           }
           .navbar {
-            background-color: #000000;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
           }
           .navbar-brand {
             font-weight: 600;
-            color: #ffffff;
             display: flex;
             align-items: center;
           }
@@ -186,12 +208,10 @@ export default function Home() {
           .nav-tabs {
             border-bottom: none;
             padding-top: 0.5rem;
-            background-color: #ffffff;
             border-top-left-radius: 8px;
             border-top-right-radius: 8px;
           }
           .nav-tabs .nav-link {
-            color: #5f6368;
             border: none;
             border-bottom: 2px solid transparent;
             transition: all 0.3s ease;
@@ -200,12 +220,10 @@ export default function Home() {
           }
           .nav-tabs .nav-link.active,
           .nav-tabs .nav-link:hover {
-            color: #1a73e8;
             border-bottom: 2px solid #1a73e8;
             background-color: transparent;
           }
           .main-content {
-            background-color: #ffffff;
             border-radius: 0 0 8px 8px;
             box-shadow: 0 1px 2px 0 rgba(60,64,67,0.3), 0 1px 3px 1px rgba(60,64,67,0.15);
             padding: 1.5rem;
@@ -217,17 +235,12 @@ export default function Home() {
           }
           .table th {
             font-weight: 600;
-            color: #333;
-            background-color: #f8f9fa;
             border-bottom: 2px solid #dee2e6;
           }
           .table td, .table th {
             padding: 0.75rem;
             vertical-align: middle;
             border-top: 1px solid #dee2e6;
-          }
-          .table-striped tbody tr:nth-of-type(odd) {
-            background-color: rgba(0, 0, 0, 0.05);
           }
           .chart-container {
             height: 400px;
@@ -251,13 +264,57 @@ export default function Home() {
             border-radius: 50%;
             animation: spin 1s linear infinite;
           }
+          .theme-toggle {
+            cursor: pointer;
+          }
         `}</style>
       </Head>
-      <Navbar expand="lg">
+      <Navbar
+        expand="lg"
+        bg={darkMode ? "dark" : "light"}
+        variant={darkMode ? "dark" : "light"}
+      >
         <Container>
-          <Navbar.Brand href="#home" style={{ color: "#ffffff" }}>
-            Portfolio Dashboard
-          </Navbar.Brand>
+          <Navbar.Brand href="#home">Portfolio Dashboard</Navbar.Brand>
+          <div className="theme-toggle" onClick={toggleDarkMode}>
+            {darkMode ? (
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <circle cx="12" cy="12" r="5"></circle>
+                <line x1="12" y1="1" x2="12" y2="3"></line>
+                <line x1="12" y1="21" x2="12" y2="23"></line>
+                <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                <line x1="1" y1="12" x2="3" y2="12"></line>
+                <line x1="21" y1="12" x2="23" y2="12"></line>
+                <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+              </svg>
+            ) : (
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+              </svg>
+            )}
+          </div>
         </Container>
       </Navbar>
       <Container className="mt-4">
