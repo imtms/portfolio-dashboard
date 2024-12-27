@@ -62,7 +62,7 @@ export default async function handler(req, res) {
       // Process performance data
       const chart = performanceData.chart.map((item) => ({
         date: item.date,
-        netPerformanceInPercentage: item.netPerformanceInPercentage,
+        netPerformanceInPercentage: item.netPerformanceInPercentage*100,
       }));
 
       // Prepare response
