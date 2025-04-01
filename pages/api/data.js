@@ -60,9 +60,14 @@ export default async function handler(req, res) {
       );
 
       // Process performance data
-      const chart = performanceData.chart.map((item) => ({
-        date: item.date,
-        netPerformanceInPercentage: item.netPerformanceInPercentage*100,
+      const oneYearAgo = new Date();
+      oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+      
+      const chart = performanceData.chart
+        .filter(item => new Date(item.date) >= oneYearAgo)
+        .map((item) => ({
+          date: item.date,
+          netPerformanceInPercentage: item.netPerformanceInPercentage*100,
       }));
 
       // Prepare response
