@@ -25,6 +25,7 @@ export default async function handler(req, res) {
 
       // Process holdings data
       const stockHoldings = holdingsData.holdings
+        .filter((holding) => holding.assetSubClass != "CASH")
         .map((holding) => ({
           symbol: holding.symbol,
           name: holding.name,
