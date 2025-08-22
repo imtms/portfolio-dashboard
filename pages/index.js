@@ -372,32 +372,38 @@ export default function Home() {
                             </tr>
                           </thead>
                           <tbody>
-                            {stockHoldings.map((holding, index) => (
-                              <tr key={index}>
-                                <td className="font-weight-medium">
-                                  {holding.symbol}
-                                </td>
-                                <td>{holding.name}</td>
-                                <td
-                                  className={
-                                    holding.netPerformancePercent >= 0
-                                      ? "text-success"
-                                      : "text-danger"
-                                  }
-                                >
-                                  {(
-                                    holding.netPerformancePercent * 100
-                                  ).toFixed(2)}
-                                  %
-                                </td>
-                                <td>
-                                  {(
-                                    holding.allocationInPercentage * 100
-                                  ).toFixed(2)}
-                                  %
-                                </td>
-                              </tr>
-                            ))}
+                            {[...stockHoldings]
+                              .sort(
+                                (a, b) =>
+                                  b.allocationInPercentage -
+                                  a.allocationInPercentage,
+                              )
+                              .map((holding, index) => (
+                                <tr key={index}>
+                                  <td className="font-weight-medium">
+                                    {holding.symbol}
+                                  </td>
+                                  <td>{holding.name}</td>
+                                  <td
+                                    className={
+                                      holding.netPerformancePercent >= 0
+                                        ? "text-success"
+                                        : "text-danger"
+                                    }
+                                  >
+                                    {(
+                                      holding.netPerformancePercent * 100
+                                    ).toFixed(2)}
+                                    %
+                                  </td>
+                                  <td>
+                                    {(
+                                      holding.allocationInPercentage * 100
+                                    ).toFixed(2)}
+                                    %
+                                  </td>
+                                </tr>
+                              ))}
                           </tbody>
                         </table>
                       </div>
@@ -422,14 +428,18 @@ export default function Home() {
                             </tr>
                           </thead>
                           <tbody>
-                            {currencyHoldings.map((holding, index) => (
-                              <tr key={index}>
-                                <td className="font-weight-medium">
-                                  {holding.currency}
-                                </td>
-                                <td>{holding.percentage.toFixed(2)}%</td>
-                              </tr>
-                            ))}
+                            {[...currencyHoldings]
+                              .sort(
+                                (a, b) => b.percentage - a.percentage,
+                              )
+                              .map((holding, index) => (
+                                <tr key={index}>
+                                  <td className="font-weight-medium">
+                                    {holding.currency}
+                                  </td>
+                                  <td>{holding.percentage.toFixed(2)}%</td>
+                                </tr>
+                              ))}
                           </tbody>
                         </table>
                       </div>
