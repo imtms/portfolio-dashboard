@@ -12,6 +12,10 @@ export default function Home() {
   const [activeTab, setActiveTab] = useState("performance");
   const [isLoading, setIsLoading] = useState(true);
   const [darkMode, setDarkMode] = useState(false);
+  const [stockSortBy, setStockSortBy] = useState("allocationInPercentage");
+  const [stockSortOrder, setStockSortOrder] = useState("desc");
+  const [currencySortBy, setCurrencySortBy] = useState("percentage");
+  const [currencySortOrder, setCurrencySortOrder] = useState("desc");
 
   const performanceChartRef = useRef(null);
   const stockPieChartRef = useRef(null);
@@ -181,6 +185,55 @@ export default function Home() {
 
   const toggleDarkMode = () => {
     setDarkMode(!darkMode);
+  };
+
+  // 排序函数
+  const getSortedStockHoldings = () => {
+    return [...stockHoldings].sort((a, b) => {
+      let valA = a[stockSortBy];
+      let valB = b[stockSortBy];
+      if (typeof valA === "string") valA = valA.toUpperCase();
+      if (typeof valB === "string") valB = valB.toUpperCase();
+      if (valA < valB) return stockSortOrder === "asc" ? -1 : 1;
+      if (valA > valB) return stockSortOrder === "asc" ? 1 : -1;
+      return 0;
+    });
+  };
+
+  const getSortedCurrencyHoldings = () => {
+    return [...currencyHoldings].sort((a, b) => {
+      let valA = a[currencySortBy];
+      let valB = b[currencySortBy];
+      if (typeof valA === "string") valA = valA.toUpperCase();
+      if (typeof valB === "string") valB = valB.toUpperCase();
+      if (valA < valB) return currencySortOrder === "asc" ? -1 : 1;
+      if (valA > valB) return currencySortOrder === "asc" ? 1 : -1;
+      return 0;
+    });
+  };
+
+  // 表头点击事件
+  const handleStockSort = (col) => {
+    if (stockSortBy === col) {
+      setStockSortOrder(stockSortOrder === "asc" ? "desc" : "asc");
+    } else {
+      setStockSortBy(col);
+      setStockSortOrder("desc");
+    }
+  };
+  const handleCurrencySort = (col) => {
+    if (currencySortBy === col) {
+      setCurrencySortOrder(currencySortOrder === "asc" ? "desc" : "asc");
+    } else {
+      setCurrencySortBy(col);
+      setCurrencySortOrder("desc");
+    }
+  };
+
+  // 排序箭头
+  const renderSortArrow = (sortBy, sortOrder, col) => {
+    if (sortBy !== col) return null;
+    return sortOrder === "asc" ? " ▲" : " ▼";
   };
 
   return (
@@ -365,45 +418,57 @@ export default function Home() {
                         <table className="table table-striped">
                           <thead>
                             <tr>
-                              <th>Symbol</th>
-                              <th>Name</th>
-                              <th>Performance</th>
-                              <th>Allocation</th>
+                              <th
+                                style={{ cursor: "pointer" }}
+                                onClick={() => handleStockSort("symbol")}
+                              >
+                                Symbol
+                                {renderSortArrow(stockSortBy, stockSortOrder, "symbol")}
+                              </th>
+                              <th
+                                style={{ cursor: "pointer" }}
+                                onClick={() => handleStockSort("name")}
+                              >
+                                Name
+                                {renderSortArrow(stockSortBy, stockSortOrder, "name")}
+                              </th>
+                              <th
+                                style={{ cursor: "pointer" }}
+                                onClick={() => handleStockSort("netPerformancePercent")}
+                              >
+                                Performance
+                                {renderSortArrow(stockSortBy, stockSortOrder, "netPerformancePercent")}
+                              </th>
+                              <th
+                                style={{ cursor: "pointer" }}
+                                onClick={() => handleStockSort("allocationInPercentage")}
+                              >
+                                Allocation
+                                {renderSortArrow(stockSortBy, stockSortOrder, "allocationInPercentage")}
+                              </th>
                             </tr>
                           </thead>
                           <tbody>
-                            {[...stockHoldings]
-                              .sort(
-                                (a, b) =>
-                                  b.allocationInPercentage -
-                                  a.allocationInPercentage,
-                              )
-                              .map((holding, index) => (
-                                <tr key={index}>
-                                  <td className="font-weight-medium">
-                                    {holding.symbol}
-                                  </td>
-                                  <td>{holding.name}</td>
-                                  <td
-                                    className={
-                                      holding.netPerformancePercent >= 0
-                                        ? "text-success"
-                                        : "text-danger"
-                                    }
-                                  >
-                                    {(
-                                      holding.netPerformancePercent * 100
-                                    ).toFixed(2)}
-                                    %
-                                  </td>
-                                  <td>
-                                    {(
-                                      holding.allocationInPercentage * 100
-                                    ).toFixed(2)}
-                                    %
-                                  </td>
-                                </tr>
-                              ))}
+                            {getSortedStockHoldings().map((holding, index) => (
+                              <tr key={index}>
+                                <td className="font-weight-medium">
+                                  {holding.symbol}
+                                </td>
+                                <td>{holding.name}</td>
+                                <td
+                                  className={
+                                    holding.netPerformancePercent >= 0
+                                      ? "text-success"
+                                      : "text-danger"
+                                  }
+                                >
+                                  {(holding.netPerformancePercent * 100).toFixed(2)}%
+                                </td>
+                                <td>
+                                  {(holding.allocationInPercentage * 100).toFixed(2)}%
+                                </td>
+                              </tr>
+                            ))}
                           </tbody>
                         </table>
                       </div>
@@ -423,23 +488,31 @@ export default function Home() {
                         <table className="table table-striped">
                           <thead>
                             <tr>
-                              <th>Currency</th>
-                              <th>Percentage</th>
+                              <th
+                                style={{ cursor: "pointer" }}
+                                onClick={() => handleCurrencySort("currency")}
+                              >
+                                Currency
+                                {renderSortArrow(currencySortBy, currencySortOrder, "currency")}
+                              </th>
+                              <th
+                                style={{ cursor: "pointer" }}
+                                onClick={() => handleCurrencySort("percentage")}
+                              >
+                                Percentage
+                                {renderSortArrow(currencySortBy, currencySortOrder, "percentage")}
+                              </th>
                             </tr>
                           </thead>
                           <tbody>
-                            {[...currencyHoldings]
-                              .sort(
-                                (a, b) => b.percentage - a.percentage,
-                              )
-                              .map((holding, index) => (
-                                <tr key={index}>
-                                  <td className="font-weight-medium">
-                                    {holding.currency}
-                                  </td>
-                                  <td>{holding.percentage.toFixed(2)}%</td>
-                                </tr>
-                              ))}
+                            {getSortedCurrencyHoldings().map((holding, index) => (
+                              <tr key={index}>
+                                <td className="font-weight-medium">
+                                  {holding.currency}
+                                </td>
+                                <td>{holding.percentage.toFixed(2)}%</td>
+                              </tr>
+                            ))}
                           </tbody>
                         </table>
                       </div>
