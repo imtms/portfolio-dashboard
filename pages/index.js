@@ -11,6 +11,8 @@ export default function Home() {
   const [chart, setChart] = useState([]);
   const [activeTab, setActiveTab] = useState("performance");
   const [isLoading, setIsLoading] = useState(true);
+  const [accounts, setAccounts] = useState([]); // {name,id}
+  const [selectedAccountIds, setSelectedAccountIds] = useState([]);
   const [darkMode, setDarkMode] = useState(false);
   const [stockSortBy, setStockSortBy] = useState("allocationInPercentage");
   const [stockSortOrder, setStockSortOrder] = useState("desc");
@@ -22,10 +24,39 @@ export default function Home() {
   const currencyPieChartRef = useRef(null);
 
   useEffect(() => {
-    const fetchData = async () => {
+    // Fetch accounts + data. Backend returns `accounts` and `selectedAccountIds` in the payload.
+    const fetchInitialData = async () => {
       try {
+        setIsLoading(true);
         const res = await fetch("/api/data");
         const data = await res.json();
+        if (data.accounts) setAccounts(data.accounts);
+
+        // Check localStorage for persisted selection. Use it if valid; otherwise use server selection.
+        const persisted = (() => {
+          try {
+            const raw = localStorage.getItem("selectedAccountIds");
+            if (!raw) return null;
+            const parsed = JSON.parse(raw);
+            if (Array.isArray(parsed)) return parsed;
+            return null;
+          } catch (e) {
+            return null;
+          }
+        })();
+
+        if (persisted && data.accounts) {
+          // validate persisted ids exist in accounts
+          const valid = persisted.filter((id) => data.accounts.some((a) => a.id === id));
+          if (valid.length > 0) {
+            // load data for persisted selection
+            await loadDataForAccounts(valid);
+            setIsLoading(false);
+            return;
+          }
+        }
+
+        if (data.selectedAccountIds) setSelectedAccountIds(data.selectedAccountIds);
         setStockHoldings(data.stockHoldings);
         setCurrencyHoldings(data.currencyHoldings);
         setChart(data.chart);
@@ -36,7 +67,7 @@ export default function Home() {
       }
     };
 
-    fetchData();
+    fetchInitialData();
 
     // Check for system dark mode preference
     const prefersDarkMode = window.matchMedia(
@@ -51,6 +82,27 @@ export default function Home() {
 
     return () => mediaQuery.removeListener(handleChange);
   }, []);
+
+  // Helper to load data for specific account ids
+  const loadDataForAccounts = async (accountIds) => {
+    try {
+      setIsLoading(true);
+      // persist selection
+      try { localStorage.setItem("selectedAccountIds", JSON.stringify(accountIds || [])); } catch (e) {}
+      const qs = accountIds && accountIds.length > 0 ? `?accounts=${accountIds.join(",")}` : "";
+      const res = await fetch(`/api/data${qs}`);
+      const data = await res.json();
+      if (data.accounts) setAccounts(data.accounts);
+      if (data.selectedAccountIds) setSelectedAccountIds(data.selectedAccountIds);
+      setStockHoldings(data.stockHoldings);
+      setCurrencyHoldings(data.currencyHoldings);
+      setChart(data.chart);
+      setIsLoading(false);
+    } catch (error) {
+      console.error("Error fetching data:", error);
+      setIsLoading(false);
+    }
+  };
 
   useEffect(() => {
     if (darkMode) {
@@ -372,6 +424,61 @@ export default function Home() {
       </Navbar>
       <Container className="mt-4">
         <div className="dashboard-wrapper">
+          {/* Account selector (compact dropdown with multi-select) */}
+          {accounts && accounts.length > 0 && (
+            <div style={{ marginBottom: 12 }}>
+              <details style={{ display: "inline-block" }}>
+                <summary style={{ cursor: "pointer", marginBottom: 6 }}>
+                  账户 ({selectedAccountIds.length}/{accounts.length}) ▾
+                </summary>
+                <div style={{ padding: 8, background: "var(--bs-body-bg)", border: "1px solid #e9ecef", borderRadius: 6 }}>
+                  <div style={{ marginBottom: 8 }}>
+                    <button
+                      type="button"
+                      className="btn btn-sm btn-outline-primary"
+                      onClick={() => {
+                        const all = accounts.map((a) => a.id);
+                        setSelectedAccountIds(all);
+                        loadDataForAccounts(all);
+                      }}
+                      style={{ marginRight: 8 }}
+                    >
+                      全选
+                    </button>
+                    <button
+                      type="button"
+                      className="btn btn-sm btn-outline-secondary"
+                      onClick={() => {
+                        setSelectedAccountIds([]);
+                        loadDataForAccounts([]);
+                      }}
+                    >
+                      清除
+                    </button>
+                  </div>
+                  <div style={{ maxHeight: 160, overflowY: "auto" }}>
+                    {accounts.map((acc) => (
+                      <label key={acc.id} style={{ display: "block", marginBottom: 6 }}>
+                        <input
+                          type="checkbox"
+                          checked={selectedAccountIds.includes(acc.id)}
+                          onChange={() => {
+                            const next = selectedAccountIds.includes(acc.id)
+                              ? selectedAccountIds.filter((a) => a !== acc.id)
+                              : [...selectedAccountIds, acc.id];
+                            setSelectedAccountIds(next);
+                            loadDataForAccounts(next);
+                          }}
+                        />
+                        <span style={{ marginLeft: 8 }}>{acc.name}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              </details>
+            </div>
+          )}
+
           <Nav variant="tabs">
             <Nav.Item>
               <Nav.Link

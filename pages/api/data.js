@@ -3,6 +3,32 @@ export default async function handler(req, res) {
   const authApiEndpoint = process.env.AUTH_API_ENDPOINT;
   const holdingsApiEndpoint = process.env.HOLDINGS_API_ENDPOINT;
   const performanceApiEndpoint = process.env.PERFORMANCE_API_ENDPOINT;
+  const accountsEnv = process.env.ACCOUNTS || "";
+
+  // Parse ACCOUNTS from env. Support either JSON or simple `Name:uuid,Name2:uuid2` format.
+  let availableAccounts = [];
+  if (accountsEnv) {
+    try {
+      const parsed = JSON.parse(accountsEnv);
+      if (Array.isArray(parsed)) {
+        // Accept array of {name,id} or {name,uuid}
+        availableAccounts = parsed.map((item) => {
+          if (!item) return null;
+          return { name: item.name || item.displayName || item.title || "", id: item.id || item.uuid || item.account || "" };
+        }).filter(Boolean);
+      } else if (typeof parsed === "object" && parsed !== null) {
+        // Object map { "DisplayName": "uuid" }
+        availableAccounts = Object.keys(parsed).map((k) => ({ name: k, id: parsed[k] }));
+      }
+    } catch (e) {
+      // Fallback parse `Name:uuid,Name2:uuid2`
+      const parts = accountsEnv.split(",").map(s => s.trim()).filter(Boolean);
+      availableAccounts = parts.map((p) => {
+        const [name, id] = p.split(":");
+        return { name: (name || "").trim(), id: (id || "").trim() };
+      }).filter(a => a.id && a.name);
+    }
+  }
 
   if (
     !accessToken ||
@@ -18,9 +44,23 @@ export default async function handler(req, res) {
     const jwtToken = await fetchAuthToken(authApiEndpoint, accessToken);
 
     if (jwtToken) {
+      // Determine which account ids to request. If query param `accounts` present, use it. Otherwise, use all available accounts (if any).
+      const requestedAccountsParam = req.query.accounts || "";
+      let requestedAccountIds = [];
+      if (requestedAccountsParam) {
+        requestedAccountIds = requestedAccountsParam.split(",").map(s => s.trim()).filter(Boolean);
+      } else if (availableAccounts.length > 0) {
+        requestedAccountIds = availableAccounts.map(a => a.id).filter(Boolean);
+      }
+
+      // Append accounts query if we have account ids
+      const accountsQuery = requestedAccountIds.length > 0 ? `&accounts=${encodeURIComponent(requestedAccountIds.join(","))}` : "";
+      const holdingsEndpointWithAccounts = `${holdingsApiEndpoint}${accountsQuery}`;
+      const performanceEndpointWithAccounts = `${performanceApiEndpoint}${accountsQuery}`;
+
       const [holdingsData, performanceData] = await Promise.all([
-        fetchData(holdingsApiEndpoint, jwtToken),
-        fetchData(performanceApiEndpoint, jwtToken),
+        fetchData(holdingsEndpointWithAccounts, jwtToken),
+        fetchData(performanceEndpointWithAccounts, jwtToken),
       ]);
 
       // Process holdings data
@@ -76,6 +116,9 @@ export default async function handler(req, res) {
         stockHoldings,
         currencyHoldings: processedCurrencyHoldings,
         chart,
+        // Expose available accounts and currently selected ids for frontend
+        accounts: availableAccounts,
+        selectedAccountIds: requestedAccountIds,
       });
 
       const encoder = new TextEncoder();
