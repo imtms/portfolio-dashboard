@@ -1,6 +1,6 @@
 import Head from "next/head";
 import { useState, useEffect, useRef, useMemo } from "react";
-import { Navbar, Nav, Container, Row, Col } from "react-bootstrap";
+import { Navbar, Nav, Container, Row, Col, Dropdown } from "react-bootstrap";
 import * as echarts from "echarts";
 
 import "bootstrap/dist/css/bootstrap.min.css";
@@ -239,6 +239,7 @@ export default function Home() {
     setDarkMode(!darkMode);
   };
 
+
   // 排序函数
   const getSortedStockHoldings = () => {
     return [...stockHoldings].sort((a, b) => {
@@ -381,7 +382,32 @@ export default function Home() {
       >
         <Container>
           <Navbar.Brand href="#home">Portfolio Dashboard</Navbar.Brand>
-          <div className="theme-toggle" onClick={toggleDarkMode}>
+          <div className="ms-auto d-flex align-items-center">
+            {accounts && accounts.length > 0 && (
+              <Dropdown align="end" style={{ marginRight: 12 }}>
+                <Dropdown.Toggle variant={darkMode ? "secondary" : "outline-secondary"} id="accounts-dropdown" size="sm">
+                  {selectedAccountIds && selectedAccountIds.length > 0
+                    ? (accounts.find(a => a.id === selectedAccountIds[0]) || {}).name || "选择账户"
+                    : "选择账户"}
+                </Dropdown.Toggle>
+
+                <Dropdown.Menu style={{ minWidth: 200 }} onClick={(e) => e.stopPropagation()}>
+                  {accounts.map((acc) => (
+                    <Dropdown.Item
+                      key={acc.id}
+                      active={selectedAccountIds.includes(acc.id)}
+                      onClick={() => {
+                        setSelectedAccountIds([acc.id]);
+                        loadDataForAccounts([acc.id]);
+                      }}
+                    >
+                      {acc.name}
+                    </Dropdown.Item>
+                  ))}
+                </Dropdown.Menu>
+              </Dropdown>
+            )}
+            <div className="theme-toggle" onClick={toggleDarkMode}>
             {darkMode ? (
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -420,64 +446,12 @@ export default function Home() {
               </svg>
             )}
           </div>
+          </div>
         </Container>
       </Navbar>
       <Container className="mt-4">
         <div className="dashboard-wrapper">
-          {/* Account selector (compact dropdown with multi-select) */}
-          {accounts && accounts.length > 0 && (
-            <div style={{ marginBottom: 12 }}>
-              <details style={{ display: "inline-block" }}>
-                <summary style={{ cursor: "pointer", marginBottom: 6 }}>
-                  账户 ({selectedAccountIds.length}/{accounts.length}) ▾
-                </summary>
-                <div style={{ padding: 8, background: "var(--bs-body-bg)", border: "1px solid #e9ecef", borderRadius: 6 }}>
-                  <div style={{ marginBottom: 8 }}>
-                    <button
-                      type="button"
-                      className="btn btn-sm btn-outline-primary"
-                      onClick={() => {
-                        const all = accounts.map((a) => a.id);
-                        setSelectedAccountIds(all);
-                        loadDataForAccounts(all);
-                      }}
-                      style={{ marginRight: 8 }}
-                    >
-                      全选
-                    </button>
-                    <button
-                      type="button"
-                      className="btn btn-sm btn-outline-secondary"
-                      onClick={() => {
-                        setSelectedAccountIds([]);
-                        loadDataForAccounts([]);
-                      }}
-                    >
-                      清除
-                    </button>
-                  </div>
-                  <div style={{ maxHeight: 160, overflowY: "auto" }}>
-                    {accounts.map((acc) => (
-                      <label key={acc.id} style={{ display: "block", marginBottom: 6 }}>
-                        <input
-                          type="checkbox"
-                          checked={selectedAccountIds.includes(acc.id)}
-                          onChange={() => {
-                            const next = selectedAccountIds.includes(acc.id)
-                              ? selectedAccountIds.filter((a) => a !== acc.id)
-                              : [...selectedAccountIds, acc.id];
-                            setSelectedAccountIds(next);
-                            loadDataForAccounts(next);
-                          }}
-                        />
-                        <span style={{ marginLeft: 8 }}>{acc.name}</span>
-                      </label>
-                    ))}
-                  </div>
-                </div>
-              </details>
-            </div>
-          )}
+          
 
           <Nav variant="tabs">
             <Nav.Item>
