@@ -18,11 +18,11 @@ export function usePortfolioData() {
       } catch (e) {
         console.warn("Failed to save selection to localStorage", e);
       }
-      
+
       const qs = accountIds && accountIds.length > 0 ? `?accounts=${accountIds.join(",")}` : "";
       const res = await fetch(`/api/data${qs}`);
       const data = await res.json();
-      
+
       if (data.accounts) setAccounts(data.accounts);
       if (data.selectedAccountIds) setSelectedAccountIds(data.selectedAccountIds);
       setStockHoldings(data.stockHoldings || []);
@@ -41,7 +41,7 @@ export function usePortfolioData() {
         setIsLoading(true);
         const res = await fetch("/api/data");
         const data = await res.json();
-        
+
         if (data.accounts) setAccounts(data.accounts);
 
         // Check localStorage for persisted selection

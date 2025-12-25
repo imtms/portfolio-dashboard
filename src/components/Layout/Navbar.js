@@ -24,9 +24,8 @@ export default function Navbar({
             variant={darkMode ? "dark" : "light"}
         >
             <Container>
-                <BsNavbar.Brand href="#home" className={styles.brand}>
-                    <img src="/logo.png" alt="" style={{ height: 30, display: "none" }} /> {/* Placeholder for logo */}
-                    Portfolio Dashboard
+                <BsNavbar.Brand href="/" className={styles.brand}>
+                    TMs Portfolio Dashboard
                 </BsNavbar.Brand>
                 <div className="ms-auto d-flex align-items-center gap-3">
                     {accounts && accounts.length > 0 && (

@@ -75,7 +75,7 @@ export default function Home() {
   return (
     <>
       <Head>
-        <title>Portfolio Dashboard</title>
+        <title>TMs Portfolio Dashboard</title>
         <meta name="description" content="View your portfolio performance and holdings" />
       </Head>
 
