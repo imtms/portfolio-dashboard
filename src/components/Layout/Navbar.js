@@ -1,0 +1,108 @@
+import { Navbar as BsNavbar, Container, Dropdown } from "react-bootstrap";
+import styles from "../../styles/Dashboard.module.css";
+import { useEffect, useState } from "react";
+
+export default function Navbar({
+    accounts,
+    selectedAccountIds,
+    onSelectAccounts,
+    darkMode,
+    toggleDarkMode,
+}) {
+    const [mounted, setMounted] = useState(false);
+
+    useEffect(() => {
+        setMounted(true);
+    }, []);
+
+    if (!mounted) return null;
+
+    return (
+        <BsNavbar
+            expand="lg"
+            className={styles.navbar}
+            variant={darkMode ? "dark" : "light"}
+        >
+            <Container>
+                <BsNavbar.Brand href="#home" className={styles.brand}>
+                    <img src="/logo.png" alt="" style={{ height: 30, display: "none" }} /> {/* Placeholder for logo */}
+                    Portfolio Dashboard
+                </BsNavbar.Brand>
+                <div className="ms-auto d-flex align-items-center gap-3">
+                    {accounts && accounts.length > 0 && (
+                        <Dropdown align="end">
+                            <Dropdown.Toggle
+                                variant={darkMode ? "outline-secondary" : "outline-primary"}
+                                id="accounts-dropdown"
+                                size="sm"
+                                className="d-flex align-items-center gap-2"
+                            >
+                                {selectedAccountIds && selectedAccountIds.length > 0
+                                    ? (accounts.find((a) => a.id === selectedAccountIds[0]) || {}).name || "Select Account"
+                                    : "Select Account"}
+                            </Dropdown.Toggle>
+
+                            <Dropdown.Menu style={{ minWidth: 200 }}>
+                                {accounts.map((acc) => (
+                                    <Dropdown.Item
+                                        key={acc.id}
+                                        active={selectedAccountIds.includes(acc.id)}
+                                        onClick={() => onSelectAccounts([acc.id])}
+                                    >
+                                        {acc.name}
+                                    </Dropdown.Item>
+                                ))}
+                            </Dropdown.Menu>
+                        </Dropdown>
+                    )}
+
+                    <div
+                        onClick={toggleDarkMode}
+                        style={{ cursor: "pointer", display: "flex", alignItems: "center" }}
+                        title="Toggle Theme"
+                    >
+                        {darkMode ? (
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                width="20"
+                                height="20"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                className="feather feather-sun"
+                            >
+                                <circle cx="12" cy="12" r="5"></circle>
+                                <line x1="12" y1="1" x2="12" y2="3"></line>
+                                <line x1="12" y1="21" x2="12" y2="23"></line>
+                                <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                                <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                                <line x1="1" y1="12" x2="3" y2="12"></line>
+                                <line x1="21" y1="12" x2="23" y2="12"></line>
+                                <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                                <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                            </svg>
+                        ) : (
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                width="20"
+                                height="20"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                className="feather feather-moon"
+                            >
+                                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                            </svg>
+                        )}
+                    </div>
+                </div>
+            </Container>
+        </BsNavbar>
+    );
+}
