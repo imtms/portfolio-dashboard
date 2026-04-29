@@ -99,17 +99,9 @@ export default async function handler(req, res) {
         }),
       );
 
-      // Process performance data
-      const startOfYear = new Date();
-      startOfYear.setYear(2025);
-      startOfYear.setMonth(0, 1); // 设置为1月1日
-      startOfYear.setHours(0, 0, 0, 0);
-
-      const chart = performanceData.chart
-        .filter(item => new Date(item.date) >= startOfYear)
-        .map((item) => ({
-          date: item.date,
-          netPerformanceInPercentage: item.netPerformanceInPercentage*100,
+      const chart = performanceData.chart.map((item) => ({
+        date: item.date,
+        netPerformanceInPercentage: item.netPerformanceInPercentage * 100,
       }));
 
       // Prepare response
