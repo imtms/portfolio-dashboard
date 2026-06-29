@@ -1,3 +1,70 @@
+function getHoldingValue(holding, fallback = 0) {
+  const value = holding?.valueInBaseCurrency ?? holding?.value ?? fallback;
+  return Number(value) || fallback;
+}
+
+function getHoldingAssetField(holding, fieldName, fallback = "") {
+  return holding?.assetProfile?.[fieldName] ?? holding?.[fieldName] ?? fallback;
+}
+
+function normalizeHolding(holding) {
+  return {
+    ...holding,
+    symbol: getHoldingAssetField(holding, "symbol", ""),
+    name: getHoldingAssetField(holding, "name", ""),
+    assetClass: getHoldingAssetField(holding, "assetClass", ""),
+    assetSubClass: getHoldingAssetField(holding, "assetSubClass", ""),
+    currency: getHoldingAssetField(holding, "currency", ""),
+    netPerformancePercent: holding?.netPerformancePercent ?? 0,
+    allocationInPercentage: holding?.allocationInPercentage ?? 0,
+    valueInBaseCurrency: getHoldingValue(holding, 0),
+  };
+}
+
+function isLiquidityHolding(holding) {
+  const assetClass = String(holding?.assetClass || "").toUpperCase();
+  const assetSubClass = String(holding?.assetSubClass || "").toUpperCase();
+  return assetClass === "LIQUIDITY" || assetSubClass === "CASH";
+}
+
+function buildStockHoldings(holdings = []) {
+  return holdings
+    .map(normalizeHolding)
+    .filter((holding) => !isLiquidityHolding(holding))
+    .map((holding) => ({
+      symbol: holding.symbol,
+      name: holding.name,
+      netPerformancePercent: holding.netPerformancePercent,
+      allocationInPercentage: holding.allocationInPercentage,
+    }));
+}
+
+function buildCurrencyHoldings(holdings = []) {
+  const normalizedHoldings = holdings.map(normalizeHolding);
+  const grouped = {};
+  let totalValue = 0;
+
+  normalizedHoldings.forEach((holding) => {
+    const currency = holding.currency || "UNKNOWN";
+    if (!grouped[currency]) {
+      grouped[currency] = {
+        currency,
+        totalValue: 0,
+        holdings: [],
+      };
+    }
+
+    grouped[currency].totalValue += holding.valueInBaseCurrency;
+    grouped[currency].holdings.push(holding);
+    totalValue += holding.valueInBaseCurrency;
+  });
+
+  return Object.values(grouped).map((currencyHolding) => ({
+    currency: currencyHolding.currency,
+    percentage: totalValue > 0 ? (currencyHolding.totalValue / totalValue) * 100 : 0,
+  }));
+}
+
 export default async function handler(req, res) {
   const accessToken = process.env.ACCESS_TOKEN;
   const authApiEndpoint = process.env.AUTH_API_ENDPOINT;
@@ -63,41 +130,12 @@ export default async function handler(req, res) {
         fetchData(performanceEndpointWithAccounts, jwtToken),
       ]);
 
-      // Process holdings data
-      const stockHoldings = holdingsData.holdings
-        .filter((holding) => holding.assetSubClass != "CASH")
-        .map((holding) => ({
-          symbol: holding.symbol,
-          name: holding.name,
-          netPerformancePercent: holding.netPerformancePercent,
-          allocationInPercentage: holding.allocationInPercentage,
-        }));
+      const normalizedHoldings = Array.isArray(holdingsData?.holdings)
+        ? holdingsData.holdings
+        : [];
 
-      const currencyHoldings = {};
-      let totalValue = 0;
-
-      holdingsData.holdings.forEach((holding) => {
-        const currency = holding.currency;
-        if (!currencyHoldings[currency]) {
-          currencyHoldings[currency] = {
-            currency,
-            totalValue: 0,
-            holdings: [],
-          };
-        }
-
-        currencyHoldings[currency].totalValue += holding.valueInBaseCurrency;
-        currencyHoldings[currency].holdings.push(holding);
-        totalValue += holding.valueInBaseCurrency;
-      });
-
-      // Calculate percentages for currency holdings
-      const processedCurrencyHoldings = Object.values(currencyHoldings).map(
-        (currencyHolding) => ({
-          currency: currencyHolding.currency,
-          percentage: (currencyHolding.totalValue / totalValue) * 100,
-        }),
-      );
+      const stockHoldings = buildStockHoldings(normalizedHoldings);
+      const processedCurrencyHoldings = buildCurrencyHoldings(normalizedHoldings);
 
       const chart = performanceData.chart.map((item) => ({
         date: item.date,
