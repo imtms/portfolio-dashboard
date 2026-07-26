@@ -1,107 +1,79 @@
-import { Navbar as BsNavbar, Container, Dropdown } from "react-bootstrap";
+import Link from "next/link";
 import styles from "../../styles/Dashboard.module.css";
-import { useEffect, useState } from "react";
 
-export default function Navbar({
-    accounts,
-    selectedAccountIds,
-    onSelectAccounts,
-    darkMode,
-    toggleDarkMode,
-}) {
-    const [mounted, setMounted] = useState(false);
+function AccountIcon() {
+  return (
+    <svg className={styles.accountIcon} viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path d="M4 7.5h16M6.5 4h11A2.5 2.5 0 0 1 20 6.5v11a2.5 2.5 0 0 1-2.5 2.5h-11A2.5 2.5 0 0 1 4 17.5v-11A2.5 2.5 0 0 1 6.5 4Z" stroke="currentColor" strokeWidth="1.6" />
+      <path d="M8 12h3M8 15.5h6" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+    </svg>
+  );
+}
 
-    useEffect(() => {
-        setMounted(true);
-    }, []);
-
-    if (!mounted) return null;
-
+function ThemeIcon({ darkMode }) {
+  if (darkMode) {
     return (
-        <BsNavbar
-            expand="lg"
-            className={styles.navbar}
-            variant={darkMode ? "dark" : "light"}
-        >
-            <Container>
-                <BsNavbar.Brand href="/" className={styles.brand}>
-                    TMs Portfolio Dashboard
-                </BsNavbar.Brand>
-                <div className="ms-auto d-flex align-items-center gap-3">
-                    {accounts && accounts.length > 0 && (
-                        <Dropdown align="end">
-                            <Dropdown.Toggle
-                                variant={darkMode ? "outline-secondary" : "outline-primary"}
-                                id="accounts-dropdown"
-                                size="sm"
-                                className="d-flex align-items-center gap-2"
-                            >
-                                {selectedAccountIds && selectedAccountIds.length > 0
-                                    ? (accounts.find((a) => a.id === selectedAccountIds[0]) || {}).name || "Select Account"
-                                    : "Select Account"}
-                            </Dropdown.Toggle>
-
-                            <Dropdown.Menu style={{ minWidth: 200 }}>
-                                {accounts.map((acc) => (
-                                    <Dropdown.Item
-                                        key={acc.id}
-                                        active={selectedAccountIds.includes(acc.id)}
-                                        onClick={() => onSelectAccounts([acc.id])}
-                                    >
-                                        {acc.name}
-                                    </Dropdown.Item>
-                                ))}
-                            </Dropdown.Menu>
-                        </Dropdown>
-                    )}
-
-                    <div
-                        onClick={toggleDarkMode}
-                        style={{ cursor: "pointer", display: "flex", alignItems: "center" }}
-                        title="Toggle Theme"
-                    >
-                        {darkMode ? (
-                            <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                width="20"
-                                height="20"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                className="feather feather-sun"
-                            >
-                                <circle cx="12" cy="12" r="5"></circle>
-                                <line x1="12" y1="1" x2="12" y2="3"></line>
-                                <line x1="12" y1="21" x2="12" y2="23"></line>
-                                <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
-                                <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
-                                <line x1="1" y1="12" x2="3" y2="12"></line>
-                                <line x1="21" y1="12" x2="23" y2="12"></line>
-                                <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
-                                <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
-                            </svg>
-                        ) : (
-                            <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                width="20"
-                                height="20"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                className="feather feather-moon"
-                            >
-                                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
-                            </svg>
-                        )}
-                    </div>
-                </div>
-            </Container>
-        </BsNavbar>
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <circle cx="12" cy="12" r="4" stroke="currentColor" strokeWidth="1.7" />
+        <path d="M12 2v2M12 20v2M4.93 4.93l1.42 1.42M17.65 17.65l1.42 1.42M2 12h2M20 12h2M4.93 19.07l1.42-1.42M17.65 6.35l1.42-1.42" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
+      </svg>
     );
+  }
+
+  return (
+    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path d="M20.4 14.8A8.5 8.5 0 0 1 9.2 3.6 8.5 8.5 0 1 0 20.4 14.8Z" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+export default function Navbar({ accounts, selectedAccountIds, onSelectAccounts, darkMode, toggleDarkMode }) {
+  const selectedValue = selectedAccountIds?.length === 1 ? selectedAccountIds[0] : "all";
+
+  return (
+    <header className={styles.navbar}>
+      <div className={styles.navbarInner}>
+        <Link href="/" className={styles.brand} aria-label="TMs Portfolio home">
+          <span className={styles.brandMark} aria-hidden="true" />
+          <span>
+            <span className={styles.brandName}>TMs Portfolio</span>
+            <span className={styles.brandMeta}>Private wealth console</span>
+          </span>
+        </Link>
+
+        <div className={styles.navbarActions}>
+          {accounts?.length > 0 && (
+            <label className={styles.accountField}>
+              <span style={{ position: "absolute", width: 1, height: 1, overflow: "hidden", clip: "rect(0 0 0 0)" }}>Account</span>
+              <AccountIcon />
+              <select
+                className={styles.accountSelect}
+                value={selectedValue}
+                onChange={(event) => {
+                  const value = event.target.value;
+                  onSelectAccounts(value === "all" ? accounts.map((account) => account.id) : [value]);
+                }}
+                aria-label="Select portfolio account"
+              >
+                <option value="all">All accounts</option>
+                {accounts.map((account) => (
+                  <option key={account.id} value={account.id}>{account.name}</option>
+                ))}
+              </select>
+            </label>
+          )}
+
+          <button
+            type="button"
+            className={styles.iconButton}
+            onClick={toggleDarkMode}
+            aria-label={darkMode ? "Use light theme" : "Use dark theme"}
+            title={darkMode ? "Use light theme" : "Use dark theme"}
+          >
+            <ThemeIcon darkMode={darkMode} />
+          </button>
+        </div>
+      </div>
+    </header>
+  );
 }

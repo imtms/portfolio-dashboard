@@ -1,3 +1,46 @@
+const previewData = {
+  accounts: [
+    { id: "aggregate", name: "All accounts" },
+    { id: "long-term", name: "Long-term portfolio" },
+    { id: "opportunistic", name: "Opportunistic account" },
+  ],
+  selectedAccountIds: ["aggregate", "long-term", "opportunistic"],
+  stockHoldings: [
+    { symbol: "BRK.B", name: "Berkshire Hathaway", netPerformancePercent: 0.1842, allocationInPercentage: 0.238 },
+    { symbol: "AAPL", name: "Apple Inc.", netPerformancePercent: 0.1264, allocationInPercentage: 0.182 },
+    { symbol: "MSFT", name: "Microsoft Corporation", netPerformancePercent: 0.0937, allocationInPercentage: 0.164 },
+    { symbol: "VOO", name: "Vanguard S&P 500 ETF", netPerformancePercent: 0.0819, allocationInPercentage: 0.151 },
+    { symbol: "NVDA", name: "NVIDIA Corporation", netPerformancePercent: 0.2841, allocationInPercentage: 0.102 },
+    { symbol: "GOOGL", name: "Alphabet Inc.", netPerformancePercent: -0.0312, allocationInPercentage: 0.071 },
+    { symbol: "TSM", name: "Taiwan Semiconductor", netPerformancePercent: 0.1176, allocationInPercentage: 0.052 },
+    { symbol: "BND", name: "Vanguard Total Bond Market ETF", netPerformancePercent: -0.0084, allocationInPercentage: 0.04 },
+  ],
+  currencyHoldings: [
+    { currency: "USD", percentage: 72.45 },
+    { currency: "SGD", percentage: 12.2 },
+    { currency: "HKD", percentage: 7.35 },
+    { currency: "CNY", percentage: 4.6 },
+    { currency: "EUR", percentage: 2.15 },
+    { currency: "JPY", percentage: 1.25 },
+  ],
+  chart: [
+    { date: "Jan 02", netPerformanceInPercentage: 0.0 },
+    { date: "Jan 16", netPerformanceInPercentage: 1.8 },
+    { date: "Feb 01", netPerformanceInPercentage: 1.1 },
+    { date: "Feb 15", netPerformanceInPercentage: 3.7 },
+    { date: "Mar 01", netPerformanceInPercentage: 2.9 },
+    { date: "Mar 15", netPerformanceInPercentage: 5.2 },
+    { date: "Apr 01", netPerformanceInPercentage: 4.4 },
+    { date: "Apr 15", netPerformanceInPercentage: 6.8 },
+    { date: "May 01", netPerformanceInPercentage: 7.5 },
+    { date: "May 15", netPerformanceInPercentage: 6.9 },
+    { date: "Jun 03", netPerformanceInPercentage: 9.2 },
+    { date: "Jun 17", netPerformanceInPercentage: 10.6 },
+    { date: "Jul 01", netPerformanceInPercentage: 9.8 },
+    { date: "Jul 15", netPerformanceInPercentage: 12.42 },
+  ],
+};
+
 function getHoldingValue(holding, fallback = 0) {
   const value = holding?.valueInBaseCurrency ?? holding?.value ?? fallback;
   return Number(value) || fallback;
@@ -66,6 +109,17 @@ function buildCurrencyHoldings(holdings = []) {
 }
 
 export default async function handler(req, res) {
+  if (process.env.NODE_ENV === "development" && process.env.USE_MOCK_DATA === "true") {
+    const requestedAccountIds = String(req.query.accounts || "")
+      .split(",")
+      .map((id) => id.trim())
+      .filter(Boolean);
+    return res.status(200).json({
+      ...previewData,
+      selectedAccountIds: requestedAccountIds.length > 0 ? requestedAccountIds : previewData.selectedAccountIds,
+    });
+  }
+
   const accessToken = process.env.ACCESS_TOKEN;
   const authApiEndpoint = process.env.AUTH_API_ENDPOINT;
   const holdingsApiEndpoint = process.env.HOLDINGS_API_ENDPOINT;
