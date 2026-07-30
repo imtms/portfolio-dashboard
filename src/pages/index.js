@@ -4,6 +4,7 @@ import dynamic from "next/dynamic";
 import { usePortfolioData } from "../hooks/usePortfolioData";
 import Navbar from "../components/Layout/Navbar";
 import LoadingSpinner from "../components/Common/LoadingSpinner";
+import ResearchReport from "../components/Dashboard/ResearchReport";
 import styles from "../styles/Dashboard.module.css";
 
 const PerformanceChart = dynamic(() => import("../components/Dashboard/PerformanceChart"), { loading: () => <LoadingSpinner />, ssr: false });
@@ -14,6 +15,7 @@ const tabs = [
   { id: "performance", label: "Performance", icon: "trend" },
   { id: "stockHoldings", label: "Assets", icon: "assets" },
   { id: "currencyHoldings", label: "Currencies", icon: "currency" },
+  { id: "research", label: "Research", icon: "research" },
 ];
 
 function TabIcon({ type }) {
@@ -22,6 +24,9 @@ function TabIcon({ type }) {
   }
   if (type === "currency") {
     return <svg className={styles.tabIcon} viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="8.5" stroke="currentColor" strokeWidth="1.7" /><path d="M15.5 8.5h-5a2 2 0 0 0 0 4h3a2 2 0 0 1 0 4h-5M12 6.5v2M12 16.5v2" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" /></svg>;
+  }
+  if (type === "research") {
+    return <svg className={styles.tabIcon} viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 3.5h9l3 3v14H6a2 2 0 0 1-2-2v-13a2 2 0 0 1 2-2Z" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round" /><path d="M14 3.5v4h4M8 12h8M8 15.5h6" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" /></svg>;
   }
   return <svg className={styles.tabIcon} viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m3 16 5-5 4 3 7-8M16 6h3v3" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" /></svg>;
 }
@@ -76,9 +81,11 @@ export default function Home() {
     performance: chart.length,
     stockHoldings: stockHoldings.length,
     currencyHoldings: currencyHoldings.length,
+    research: "30 Jul",
   };
 
   const renderContent = () => {
+    if (activeTab === "research") return <ResearchReport />;
     if (isLoading) return <LoadingSpinner />;
     if (activeTab === "stockHoldings") return <StockHoldings holdings={stockHoldings} darkMode={darkMode} />;
     if (activeTab === "currencyHoldings") return <CurrencyHoldings holdings={currencyHoldings} darkMode={darkMode} />;
@@ -89,7 +96,7 @@ export default function Home() {
     <>
       <Head>
         <title>TMs Portfolio | Wealth Console</title>
-        <meta name="description" content="Portfolio performance, asset allocation, and currency exposure." />
+        <meta name="description" content="Portfolio performance, asset allocation, currency exposure, and latest results research." />
       </Head>
 
       <Navbar
