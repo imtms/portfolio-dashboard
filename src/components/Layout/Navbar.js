@@ -42,6 +42,8 @@ export default function Navbar({ accounts, selectedAccountIds, onSelectAccounts,
         </Link>
 
         <div className={styles.navbarActions}>
+          <Link href="/articles" className={styles.researchNavLink}>Articles</Link>
+          <Link href="/research" className={styles.researchNavLink}>Research monitor</Link>
           {accounts?.length > 0 && (
             <label className={styles.accountField}>
               <span style={{ position: "absolute", width: 1, height: 1, overflow: "hidden", clip: "rect(0 0 0 0)" }}>Account</span>

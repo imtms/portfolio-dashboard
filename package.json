@@ -7,10 +7,13 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint src",
-    "test:visual": "playwright test"
+    "test:visual": "playwright test",
+    "test:research": "node scripts/research-smoke.mjs",
+    "test:articles": "node scripts/articles-smoke.mjs"
   },
   "dependencies": {
     "echarts": "^5.5.1",
+    "gray-matter": "^4.0.3",
     "next": "16.0.7",
     "react": "^18",
     "react-dom": "^18",

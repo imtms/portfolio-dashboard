@@ -20,6 +20,7 @@ export default function PerformanceChart({ data, darkMode }) {
   const latest = Number(data.at(-1)?.netPerformanceInPercentage);
 
   const palette = useMemo(() => {
+    void darkMode; // Re-read CSS theme tokens when the active theme changes.
     if (typeof window === "undefined") return {};
     const computed = getComputedStyle(document.documentElement);
     return {

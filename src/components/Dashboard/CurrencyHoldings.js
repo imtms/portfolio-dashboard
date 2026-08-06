@@ -39,6 +39,7 @@ export default function CurrencyHoldings({ holdings, darkMode }) {
   const [sortOrder, setSortOrder] = useState("desc");
 
   const palette = useMemo(() => {
+    void darkMode; // Re-read CSS theme tokens when the active theme changes.
     if (typeof window === "undefined") return {};
     const computed = getComputedStyle(document.documentElement);
     return {
