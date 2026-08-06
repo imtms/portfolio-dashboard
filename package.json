@@ -8,7 +8,6 @@
     "start": "next start",
     "lint": "eslint src",
     "test:visual": "playwright test",
-    "test:research": "node scripts/research-smoke.mjs",
     "test:articles": "node scripts/articles-smoke.mjs"
   },
   "dependencies": {

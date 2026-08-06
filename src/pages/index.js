@@ -100,6 +100,7 @@ export default function Home() {
       </Head>
 
       <Navbar
+        activeSection="portfolio"
         accounts={accounts}
         selectedAccountIds={selectedAccountIds}
         onSelectAccounts={loadDataForAccounts}
@@ -134,20 +135,28 @@ export default function Home() {
         <section className={styles.dashboardShell}>
           <div className={styles.tabsBar}>
             <div className={styles.navTabs} role="tablist" aria-label="Portfolio views">
-              {tabs.map((tab) => (
-                <button
-                  type="button"
-                  key={tab.id}
-                  role="tab"
-                  aria-selected={activeTab === tab.id}
-                  className={`${styles.tabButton} ${activeTab === tab.id ? styles.tabButtonActive : ""}`}
-                  onClick={() => setActiveTab(tab.id)}
-                >
-                  <TabIcon type={tab.icon} />
-                  {tab.label}
-                  <span className={styles.tabCount}>{tabCounts[tab.id]}</span>
-                </button>
-              ))}
+              {tabs.map((tab) => {
+                const content = (
+                  <>
+                    <TabIcon type={tab.icon} />
+                    {tab.label}
+                    {tabCounts[tab.id] !== undefined && <span className={styles.tabCount}>{tabCounts[tab.id]}</span>}
+                  </>
+                );
+
+                return (
+                  <button
+                    type="button"
+                    key={tab.id}
+                    role="tab"
+                    aria-selected={activeTab === tab.id}
+                    className={`${styles.tabButton} ${activeTab === tab.id ? styles.tabButtonActive : ""}`}
+                    onClick={() => setActiveTab(tab.id)}
+                  >
+                    {content}
+                  </button>
+                );
+              })}
             </div>
             <span className={styles.sectionMeta}>Base currency normalized</span>
           </div>

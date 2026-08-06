@@ -1,5 +1,5 @@
 import Link from "next/link";
-import styles from "../../styles/Dashboard.module.css";
+import styles from "../../styles/Articles.module.css";
 
 function AccountIcon() {
   return (
@@ -11,42 +11,38 @@ function AccountIcon() {
 }
 
 function ThemeIcon({ darkMode }) {
-  if (darkMode) {
-    return (
-      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-        <circle cx="12" cy="12" r="4" stroke="currentColor" strokeWidth="1.7" />
-        <path d="M12 2v2M12 20v2M4.93 4.93l1.42 1.42M17.65 17.65l1.42 1.42M2 12h2M20 12h2M4.93 19.07l1.42-1.42M17.65 6.35l1.42-1.42" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
-      </svg>
-    );
-  }
-
-  return (
-    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path d="M20.4 14.8A8.5 8.5 0 0 1 9.2 3.6 8.5 8.5 0 1 0 20.4 14.8Z" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round" />
-    </svg>
-  );
+  return darkMode
+    ? <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.9 4.9l1.4 1.4m11.4 11.4 1.4 1.4M2 12h2m16 0h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+    : <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.4 14.8A8.5 8.5 0 0 1 9.2 3.6a8.5 8.5 0 1 0 11.2 11.2Z"/></svg>;
 }
 
-export default function Navbar({ accounts, selectedAccountIds, onSelectAccounts, darkMode, toggleDarkMode }) {
-  const selectedValue = selectedAccountIds?.length === 1 ? selectedAccountIds[0] : "all";
+export default function Navbar({
+  activeSection = "portfolio",
+  accounts = [],
+  selectedAccountIds = [],
+  onSelectAccounts,
+  darkMode,
+  toggleDarkMode,
+}) {
+  const selectedValue = selectedAccountIds.length === 1 ? selectedAccountIds[0] : "all";
 
   return (
-    <header className={styles.navbar}>
-      <div className={styles.navbarInner}>
+    <header className={styles.topbar}>
+      <div className={styles.topbarInner}>
         <Link href="/" className={styles.brand} aria-label="TMs Portfolio home">
           <span className={styles.brandMark} aria-hidden="true" />
-          <span>
-            <span className={styles.brandName}>TMs Portfolio</span>
-            <span className={styles.brandMeta}>Private wealth console</span>
-          </span>
+          <span><b>TMs Portfolio</b><small>Private wealth console</small></span>
         </Link>
 
-        <div className={styles.navbarActions}>
-          <Link href="/articles" className={styles.researchNavLink}>Articles</Link>
-          <Link href="/research" className={styles.researchNavLink}>Research monitor</Link>
-          {accounts?.length > 0 && (
+        <nav className={styles.productNav} aria-label="Product navigation">
+          <Link className={activeSection === "portfolio" ? styles.activeNav : ""} href="/" aria-current={activeSection === "portfolio" ? "page" : undefined}>Portfolio</Link>
+          <Link className={activeSection === "articles" ? styles.activeNav : ""} href="/articles" aria-current={activeSection === "articles" ? "page" : undefined}>Articles</Link>
+        </nav>
+
+        <div className={styles.navActions}>
+          {accounts.length > 0 && onSelectAccounts && (
             <label className={styles.accountField}>
-              <span style={{ position: "absolute", width: 1, height: 1, overflow: "hidden", clip: "rect(0 0 0 0)" }}>Account</span>
+              <span className={styles.visuallyHidden}>Account</span>
               <AccountIcon />
               <select
                 className={styles.accountSelect}
@@ -58,21 +54,13 @@ export default function Navbar({ accounts, selectedAccountIds, onSelectAccounts,
                 aria-label="Select portfolio account"
               >
                 <option value="all">All accounts</option>
-                {accounts.map((account) => (
-                  <option key={account.id} value={account.id}>{account.name}</option>
-                ))}
+                {accounts.map((account) => <option key={account.id} value={account.id}>{account.name}</option>)}
               </select>
             </label>
           )}
 
-          <button
-            type="button"
-            className={styles.iconButton}
-            onClick={toggleDarkMode}
-            aria-label={darkMode ? "Use light theme" : "Use dark theme"}
-            title={darkMode ? "Use light theme" : "Use dark theme"}
-          >
-            <ThemeIcon darkMode={darkMode} />
+          <button type="button" onClick={toggleDarkMode} className={styles.iconButton} aria-label={darkMode ? "Use light theme" : "Use dark theme"}>
+            <ThemeIcon darkMode={darkMode}/>
           </button>
         </div>
       </div>

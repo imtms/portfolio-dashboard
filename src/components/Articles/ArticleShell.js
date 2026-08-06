@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import ArticleNavbar from "./ArticleNavbar";
+import Navbar from "../Layout/Navbar";
 
 export default function ArticleShell({ children }) {
   const [darkMode, setDarkMode] = useState(() => {
@@ -21,5 +21,5 @@ export default function ArticleShell({ children }) {
     });
   };
 
-  return <><ArticleNavbar darkMode={darkMode} onTheme={toggleTheme}/>{children}</>;
+  return <><Navbar activeSection="articles" darkMode={darkMode} toggleDarkMode={toggleTheme}/>{children}</>;
 }
