@@ -8,13 +8,13 @@ export default function ResearchReport() {
     <article className={styles.researchReport}>
       <header className={styles.researchHeader}>
         <div>
-          <span className={styles.panelLabel}>Research note / 05 Aug 2026</span>
+          <span className={styles.panelLabel}>Research note / 08 Aug 2026</span>
           <h1 className={styles.researchTitle}>Portfolio latest results</h1>
           <p className={styles.researchDescription}>A fundamentals-led review of the latest reported results, fund exposures, and portfolio concentration risks.</p>
         </div>
         <div className={styles.researchMeta}>
           <span>Data cut-off</span>
-          <strong>2026-08-05 17:08 UTC</strong>
+          <strong>2026-08-08 04:20 UTC</strong>
         </div>
       </header>
       <div className={styles.reportBody}>
