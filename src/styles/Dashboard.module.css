@@ -663,6 +663,25 @@
   font-weight: 600;
 }
 
+.symbolLink {
+  color: var(--accent-strong);
+  text-decoration: underline;
+  text-decoration-color: transparent;
+  text-underline-offset: 3px;
+  transition: color var(--duration-fast) var(--ease-out), text-decoration-color var(--duration-fast) var(--ease-out);
+}
+
+.symbolLink:hover {
+  color: var(--accent);
+  text-decoration-color: currentColor;
+}
+
+.symbolLink:focus-visible {
+  border-radius: var(--radius-sm);
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
 .nameCell {
   max-width: 220px;
   overflow: hidden;

@@ -3,6 +3,11 @@ import * as echarts from "echarts";
 import styles from "../../styles/Dashboard.module.css";
 
 const chartColors = ["#168a61", "#4f8f78", "#78a69a", "#9f8c5d", "#877f9f", "#5f7c91", "#b06f66", "#6e9270"];
+const analysisBaseUrl = "https://xh.tms.im";
+
+function getAnalysisUrl(symbol) {
+  return `${analysisBaseUrl}/${encodeURIComponent(symbol.trim())}`;
+}
 
 function SortIcon({ active, order }) {
   return (
@@ -161,7 +166,17 @@ export default function StockHoldings({ holdings, darkMode }) {
               <tbody>
                 {sortedHoldings.map((holding) => (
                   <tr key={`${holding.symbol}-${holding.name}`}>
-                    <td className={styles.symbolCell}>{holding.symbol}</td>
+                    <td className={styles.symbolCell}>
+                      <a
+                        className={styles.symbolLink}
+                        href={getAnalysisUrl(holding.symbol)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        aria-label={`Analyze ${holding.symbol} on Xiheng`}
+                      >
+                        {holding.symbol}
+                      </a>
+                    </td>
                     <td className={styles.nameCell} title={holding.name}>{holding.name}</td>
                     <td className={`${styles.numeric} ${styles.numberCell} ${holding.netPerformancePercent >= 0 ? styles.positive : styles.negative}`}>{holding.netPerformancePercent >= 0 ? "+" : ""}{(holding.netPerformancePercent * 100).toFixed(2)}%</td>
                     <td className={`${styles.numeric} ${styles.numberCell}`}><span className={styles.allocationCell}><span className={styles.allocationTrack}><span className={styles.allocationFill} style={{ width: `${Math.min(100, holding.allocationInPercentage * 100)}%` }} /></span>{(holding.allocationInPercentage * 100).toFixed(2)}%</span></td>

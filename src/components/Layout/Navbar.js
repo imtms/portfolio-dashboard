@@ -37,6 +37,7 @@ export default function Navbar({
         <nav className={styles.productNav} aria-label="Product navigation">
           <Link className={activeSection === "portfolio" ? styles.activeNav : ""} href="/" aria-current={activeSection === "portfolio" ? "page" : undefined}>Portfolio</Link>
           <Link className={activeSection === "articles" ? styles.activeNav : ""} href="/articles" aria-current={activeSection === "articles" ? "page" : undefined}>Articles</Link>
+          <a href="https://xh.tms.im" target="_blank" rel="noopener noreferrer">Analysis</a>
         </nav>
 
         <div className={styles.navActions}>
