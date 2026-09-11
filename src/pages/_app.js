@@ -1,5 +1,6 @@
 import "../styles/globals.css";
 import Head from "next/head";
+import { Analytics } from "@vercel/analytics/next";
 
 export default function MyApp({ Component, pageProps }) {
   return (
@@ -9,6 +10,7 @@ export default function MyApp({ Component, pageProps }) {
         <meta name="theme-color" content="#f5f8f6" />
       </Head>
       <Component {...pageProps} />
+      <Analytics />
     </>
   );
 }
