@@ -81,7 +81,7 @@ export default function Home() {
     performance: chart.length,
     stockHoldings: stockHoldings.length,
     currencyHoldings: currencyHoldings.length,
-    research: "05 Sep",
+    research: "12 Sep",
   };
 
   const renderContent = () => {
