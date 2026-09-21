@@ -46,6 +46,14 @@ function getHoldingValue(holding, fallback = 0) {
   return Number(value) || fallback;
 }
 
+function getHoldingQuantity(holding) {
+  const quantity = holding?.quantity ?? holding?.units ?? holding?.shares;
+  if (quantity === undefined || quantity === null || quantity === "") return null;
+
+  const parsedQuantity = Number(quantity);
+  return Number.isFinite(parsedQuantity) ? parsedQuantity : null;
+}
+
 function getHoldingAssetField(holding, fieldName, fallback = "") {
   return holding?.assetProfile?.[fieldName] ?? holding?.[fieldName] ?? fallback;
 }
@@ -70,9 +78,15 @@ function isLiquidityHolding(holding) {
   return assetClass === "LIQUIDITY" || assetSubClass === "CASH";
 }
 
+function isActiveHolding(holding) {
+  const quantity = getHoldingQuantity(holding);
+  return quantity !== null ? quantity !== 0 : holding.valueInBaseCurrency !== 0;
+}
+
 function buildStockHoldings(holdings = []) {
   return holdings
     .map(normalizeHolding)
+    .filter(isActiveHolding)
     .filter((holding) => !isLiquidityHolding(holding))
     .map((holding) => ({
       symbol: holding.symbol,
@@ -83,7 +97,7 @@ function buildStockHoldings(holdings = []) {
 }
 
 function buildCurrencyHoldings(holdings = []) {
-  const normalizedHoldings = holdings.map(normalizeHolding);
+  const normalizedHoldings = holdings.map(normalizeHolding).filter(isActiveHolding);
   const grouped = {};
   let totalValue = 0;
 

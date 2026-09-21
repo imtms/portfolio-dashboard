@@ -11,6 +11,12 @@ function buildStockHoldingsForTest(holdings = []) {
       allocationInPercentage: holding?.allocationInPercentage ?? 0,
       valueInBaseCurrency: holding?.valueInBaseCurrency ?? holding?.value ?? 0,
     }))
+    .filter((holding) => {
+      const quantity = holding?.quantity ?? holding?.units ?? holding?.shares;
+      return quantity !== undefined && quantity !== null && quantity !== ""
+        ? Number(quantity) !== 0
+        : holding.valueInBaseCurrency !== 0;
+    })
     .filter((holding) => !(String(holding.assetClass || "").toUpperCase() === "LIQUIDITY" || String(holding.assetSubClass || "").toUpperCase() === "CASH"))
     .map((holding) => ({
       symbol: holding.symbol,
@@ -92,6 +98,19 @@ function runTests() {
       allocationInPercentage: 0.3,
       netPerformancePercent: 0.08,
       valueInBaseCurrency: 600,
+    },
+    {
+      assetProfile: {
+        assetClass: 'EQUITY',
+        assetSubClass: 'STOCK',
+        symbol: 'SOLD.SZ',
+        name: 'Sold position',
+        currency: 'USD',
+      },
+      allocationInPercentage: 0,
+      netPerformancePercent: 0.25,
+      quantity: 0,
+      valueInBaseCurrency: 0,
     },
   ];
 
