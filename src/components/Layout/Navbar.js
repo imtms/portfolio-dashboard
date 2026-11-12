@@ -23,6 +23,11 @@ export default function Navbar({
   onSelectAccounts,
   darkMode,
   toggleDarkMode,
+  onRefresh,
+  isRefreshing = false,
+  refreshDisabled = false,
+  updatedAt,
+  isStale = false,
 }) {
   const selectedValue = selectedAccountIds.length === 1 ? selectedAccountIds[0] : "all";
 
@@ -59,6 +64,26 @@ export default function Navbar({
                 {accounts.map((account) => <option key={account.id} value={account.id}>{account.name}</option>)}
               </select>
             </label>
+          )}
+
+          {onRefresh && (
+            <>
+              {updatedAt && <time className={styles.updatedAt} dateTime={updatedAt} title={`Last successful refresh: ${new Date(updatedAt).toLocaleString()}`}>
+                {isStale ? "Cached" : "Updated"} {new Date(updatedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: false })}
+              </time>}
+              <button
+                type="button"
+                onClick={() => onRefresh()}
+                className={`${styles.iconButton} ${styles.refreshButton}`}
+                disabled={refreshDisabled || isRefreshing}
+                aria-label="Refresh portfolio data"
+                aria-busy={isRefreshing}
+                title="Fetch the latest portfolio data"
+              >
+                <svg className={isRefreshing ? styles.refreshing : ""} viewBox="0 0 24 24" aria-hidden="true"><path d="M20 7v5h-5M4 17v-5h5" strokeLinecap="round" strokeLinejoin="round"/><path d="M6.1 7a7 7 0 0 1 11.6-1L20 9M4 15l2.3 3A7 7 0 0 0 17.9 17" strokeLinecap="round"/></svg>
+                <span className={styles.refreshLabel}>{isRefreshing ? "Refreshing" : "Refresh"}</span>
+              </button>
+            </>
           )}
 
           <button type="button" onClick={toggleDarkMode} className={styles.iconButton} aria-label={darkMode ? "Use light theme" : "Use dark theme"}>

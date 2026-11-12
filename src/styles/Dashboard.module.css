@@ -149,6 +149,16 @@
   padding: var(--space-6) 0 var(--space-12);
 }
 
+.dataError {
+  margin: 0 0 var(--space-4);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--negative-soft);
+  color: var(--negative);
+  font-size: 13px;
+}
+
 .panelLabel,
 .metricLabel,
 .sectionMeta {

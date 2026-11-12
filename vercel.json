@@ -1,0 +1,12 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "schedules": {
+    "portfolio-cache-refresh": {
+      "schedule": "*/15 * * * *",
+      "timezone": "Asia/Shanghai",
+      "jitter": 15,
+      "path": "/api/cron/refresh",
+      "requestMethod": "GET"
+    }
+  }
+}

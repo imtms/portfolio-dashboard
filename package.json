@@ -8,10 +8,13 @@
     "start": "next start",
     "lint": "eslint src",
     "test:visual": "playwright test",
-    "test:articles": "node scripts/articles-smoke.mjs"
+    "test:articles": "node scripts/articles-smoke.mjs",
+    "test:data": "node --test tests/*.test.mjs",
+    "test:portfolio": "node scripts/portfolio-smoke.mjs"
   },
   "dependencies": {
     "@vercel/analytics": "^2.0.1",
+    "@vercel/functions": "^3.3.1",
     "echarts": "^5.5.1",
     "gray-matter": "^4.0.3",
     "next": "16.0.7",

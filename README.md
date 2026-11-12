@@ -15,6 +15,30 @@ npm start
 
 Open `/` for the existing portfolio dashboard and `/research` for the research monitor. The existing environment-based portfolio API remains unchanged. Research data defaults to `data/research.json`; set `RESEARCH_DATA_PATH=/absolute/path/research.json` to place it on a persistent volume.
 
+## Portfolio caching and refresh
+
+Portfolio snapshots use [Vercel Runtime Cache](https://vercel.com/docs/runtime-cache), available on the Hobby plan. Each account selection has a separate cache entry. Snapshots are fresh for 5 minutes and retained for up to 48 hours; Vercel may evict them earlier. A cache miss still waits for the upstream service.
+
+- Opening the dashboard uses the saved account selection in one request.
+- Cached data appears immediately. After 5 minutes, a read starts a background refresh; the dashboard checks for the result every 5 seconds for up to a minute. An open, visible dashboard also checks every 5 minutes and when returning to the tab.
+- **Refresh** in the upper right bypasses cached data, fetches the latest data, and updates the same cache entry. Failed refreshes preserve the previous snapshot and display an error. **Updated/Cached** shows when the snapshot was successfully fetched, not the market quote time.
+- Browser and CDN response caching are disabled for the portfolio API. Only the server-side snapshot is reused. Cache keys isolate projects, environments, data sources, credentials, and account selections.
+- Local development uses the SDK's in-memory fallback; Vercel uses the shared regional cache. No Redis or paid storage is required.
+
+### Automatic refresh on Vercel Hobby
+
+`vercel.json` defines the `portfolio-cache-refresh` [Vercel Schedule](https://vercel.com/docs/schedules), running `/api/cron/refresh` every 15 minutes to warm the combined portfolio and every individual account. This works even when nobody has the dashboard open.
+
+To enable it:
+
+1. In the Vercel project's **Settings → Environment Variables**, add `CRON_SECRET` for **Production**, using a random value of at least 16 characters. Keep it private; do not use a `NEXT_PUBLIC_` variable. Vercel automatically sends it as the cron request's bearer token.
+2. Deploy the changes to Production. Production schedules start active; new Preview schedules start inactive.
+3. In **Schedules**, select Production and check that `portfolio-cache-refresh` is active. Use **Run Schedule** and inspect execution history to verify it. A successful response reports the number of refreshed account selections. Requests without the matching secret return `401`.
+
+Schedules are currently in beta. On Hobby, the minimum interval and execution jitter window are both **15 minutes**: a scheduled run may arrive up to 15 minutes after its scheduled time. This uses at most 2,976 scheduled runs in a 31-day month, within the **5,000 runs per team per billing period** allowance (other projects and manual runs share it). This configuration uses the new `schedules` property; legacy `crons` are limited to once per day on Hobby. The 5-minute background refresh is still triggered by visits. See [Schedules limits](https://vercel.com/docs/schedules/limits).
+
+Validation: `npm run test:data` exercises the real API/cache handlers with a controlled upstream; `npm run test:portfolio` checks the dashboard against a running local server (defaults to `http://localhost:3000`, override with `PORTFOLIO_TEST_URL`).
+
 ## Research workflow
 
 1. Create an asset in the watchlist and record its core thesis/current conclusion.

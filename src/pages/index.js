@@ -37,7 +37,7 @@ function formatPerformance(value) {
 }
 
 export default function Home() {
-  const { stockHoldings, currencyHoldings, chart, isLoading, accounts, selectedAccountIds, loadDataForAccounts } = usePortfolioData();
+  const { stockHoldings, currencyHoldings, chart, isLoading, isRefreshing, error, updatedAt, isStale, accounts, selectedAccountIds, loadDataForAccounts, refreshData } = usePortfolioData();
   const [activeTab, setActiveTab] = useState("performance");
   const [darkMode, setDarkMode] = useState(() => {
     if (typeof window === "undefined") return false;
@@ -106,9 +106,15 @@ export default function Home() {
         onSelectAccounts={loadDataForAccounts}
         darkMode={darkMode}
         toggleDarkMode={toggleDarkMode}
+        onRefresh={refreshData}
+        isRefreshing={isRefreshing}
+        refreshDisabled={isLoading}
+        updatedAt={updatedAt}
+        isStale={isStale}
       />
 
       <main className={styles.page}>
+        {error && <p className={styles.dataError} role="alert">{error}{updatedAt && " Showing the last loaded data."}</p>}
         <section className={styles.metricsGrid} aria-label="Portfolio summary">
           <div className={styles.metric}>
             <span className={styles.metricLabel}>Net performance</span>
