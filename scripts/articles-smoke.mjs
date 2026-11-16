@@ -16,6 +16,11 @@ const articles = files.map((fileName) => {
   const normalizedDate = data.date instanceof Date ? data.date : String(data.date).trim();
   const date = normalizedDate instanceof Date ? normalizedDate : new Date(/^\d{4}-\d{2}-\d{2}$/.test(normalizedDate) ? `${normalizedDate}T00:00:00Z` : normalizedDate);
   assert.ok(!Number.isNaN(date.getTime()), `${fileName}: date must be YYYY-MM-DD`);
+  if (data.updated) {
+    const updated = data.updated instanceof Date ? data.updated : new Date(`${String(data.updated).trim()}T00:00:00Z`);
+    assert.ok(!Number.isNaN(updated.getTime()), `${fileName}: updated must be YYYY-MM-DD`);
+    assert.ok(updated >= date, `${fileName}: updated must not precede date`);
+  }
   return { fileName, date: date.toISOString().slice(0, 10) };
 });
 

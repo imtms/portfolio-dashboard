@@ -9,6 +9,7 @@
     "lint": "eslint src",
     "test:visual": "playwright test",
     "test:articles": "node scripts/articles-smoke.mjs",
+    "test:seo": "node scripts/seo-smoke.mjs",
     "test:data": "node --test tests/*.test.mjs",
     "test:portfolio": "node scripts/portfolio-smoke.mjs"
   },

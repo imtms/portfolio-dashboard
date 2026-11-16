@@ -38,10 +38,15 @@ function readArticle(fileName) {
   if (!data.title) throw new Error(`Article ${fileName} is missing a title`);
   if (!data.date) throw new Error(`Article ${fileName} is missing a date`);
 
+  const date = toIsoDate(data.date, fileName);
+  const updated = data.updated ? toIsoDate(data.updated, fileName) : null;
+  if (updated && updated < date) throw new Error(`Article ${fileName} has an updated date before its publication date`);
+
   return {
     slug,
     title: String(data.title),
-    date: toIsoDate(data.date, fileName),
+    date,
+    updated,
     summary: data.summary ? String(data.summary) : excerptFrom(content),
     tags: Array.isArray(data.tags) ? data.tags.map(String) : [],
     readingMinutes: readingTime(content),

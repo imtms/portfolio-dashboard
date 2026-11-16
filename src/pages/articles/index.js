@@ -1,6 +1,6 @@
-import Head from "next/head";
 import Link from "next/link";
 import ArticleShell from "../../components/Articles/ArticleShell";
+import SeoHead from "../../components/Common/SeoHead";
 import { getAllArticles } from "../../lib/articles";
 import styles from "../../styles/Articles.module.css";
 
@@ -11,10 +11,7 @@ function formatDate(date) {
 export default function Articles({ articles }) {
   return (
     <ArticleShell>
-      <Head>
-        <title>Analysis Articles | TMs Portfolio</title>
-        <meta name="description" content="按时间整理的投资分析、财报复盘与组合研究文章。"/>
-      </Head>
+      <SeoHead title="分析文章 | TMs Portfolio" description="按时间整理的投资分析、财报复盘与组合研究文章。" path="/articles" />
       <main className={styles.page}>
         <section className={styles.hero}>
           <div>

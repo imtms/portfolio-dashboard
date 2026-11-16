@@ -1,9 +1,9 @@
-import Head from "next/head";
 import { useEffect, useMemo, useState } from "react";
 import dynamic from "next/dynamic";
 import { usePortfolioData } from "../hooks/usePortfolioData";
 import Navbar from "../components/Layout/Navbar";
 import LoadingSpinner from "../components/Common/LoadingSpinner";
+import SeoHead from "../components/Common/SeoHead";
 import ResearchReport from "../components/Dashboard/ResearchReport";
 import styles from "../styles/Dashboard.module.css";
 
@@ -94,10 +94,7 @@ export default function Home() {
 
   return (
     <>
-      <Head>
-        <title>TMs Portfolio | Wealth Console</title>
-        <meta name="description" content="Portfolio performance, asset allocation, currency exposure, and latest results research." />
-      </Head>
+      <SeoHead title="TMs Portfolio | Wealth Console" description="Portfolio performance, asset allocation, currency exposure, and latest results research." path="/" locale="en_US" />
 
       <Navbar
         activeSection="portfolio"
