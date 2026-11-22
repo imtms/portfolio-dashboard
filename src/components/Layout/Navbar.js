@@ -1,5 +1,5 @@
 import Link from "next/link";
-import styles from "../../styles/Articles.module.css";
+import styles from "../../styles/Navbar.module.css";
 
 function AccountIcon() {
   return (
@@ -12,8 +12,8 @@ function AccountIcon() {
 
 function ThemeIcon({ darkMode }) {
   return darkMode
-    ? <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.9 4.9l1.4 1.4m11.4 11.4 1.4 1.4M2 12h2m16 0h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
-    : <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.4 14.8A8.5 8.5 0 0 1 9.2 3.6a8.5 8.5 0 1 0 11.2 11.2Z"/></svg>;
+    ? <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4" /><path d="M12 2v2m0 16v2M4.9 4.9l1.4 1.4m11.4 11.4 1.4 1.4M2 12h2m16 0h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" /></svg>
+    : <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.4 14.8A8.5 8.5 0 0 1 9.2 3.6a8.5 8.5 0 1 0 11.2 11.2Z" /></svg>;
 }
 
 export default function Navbar({
@@ -36,14 +36,25 @@ export default function Navbar({
       <div className={styles.topbarInner}>
         <Link href="/" className={styles.brand} aria-label="TMs Portfolio home">
           <span className={styles.brandMark} aria-hidden="true" />
-          <span><b>TMs Portfolio</b><small>Private wealth console</small></span>
+          <span className={styles.brandText}>
+            <b>TMs Portfolio</b>
+            <small>Private wealth console</small>
+          </span>
         </Link>
 
         <nav className={styles.productNav} aria-label="Product navigation">
-          <Link className={activeSection === "portfolio" ? styles.activeNav : ""} href="/" aria-current={activeSection === "portfolio" ? "page" : undefined}>Portfolio</Link>
-          <Link className={activeSection === "articles" ? styles.activeNav : ""} href="/articles" aria-current={activeSection === "articles" ? "page" : undefined}>Articles</Link>
-          <a href="https://assets.mengshi.de/" target="_blank" rel="noopener noreferrer">Assets</a>
-          <a href="https://xh.tms.im" target="_blank" rel="noopener noreferrer">Analysis</a>
+          <Link className={activeSection === "portfolio" ? styles.activeNav : ""} href="/" aria-current={activeSection === "portfolio" ? "page" : undefined}>
+            Portfolio
+          </Link>
+          <Link className={activeSection === "articles" ? styles.activeNav : ""} href="/articles" aria-current={activeSection === "articles" ? "page" : undefined}>
+            Articles
+          </Link>
+          <a href="https://assets.mengshi.de/" target="_blank" rel="noopener noreferrer">
+            Assets <span className={styles.externalArrow} aria-hidden="true">↗</span>
+          </a>
+          <a href="https://xh.tms.im" target="_blank" rel="noopener noreferrer">
+            Analysis <span className={styles.externalArrow} aria-hidden="true">↗</span>
+          </a>
         </nav>
 
         <div className={styles.navActions}>
@@ -68,9 +79,14 @@ export default function Navbar({
 
           {onRefresh && (
             <>
-              {updatedAt && <time className={styles.updatedAt} dateTime={updatedAt} title={`Last successful refresh: ${new Date(updatedAt).toLocaleString()}`}>
-                {isStale ? "Cached" : "Updated"} {new Date(updatedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: false })}
-              </time>}
+              {updatedAt && (
+                <span className={styles.statusPill}>
+                  <span className={`${styles.statusDot} ${isStale ? styles.statusDotStale : ""}`} aria-hidden="true" />
+                  <time dateTime={updatedAt} title={`Last successful refresh: ${new Date(updatedAt).toLocaleString()}`}>
+                    {isStale ? "Cached" : "Updated"} {new Date(updatedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: false })}
+                  </time>
+                </span>
+              )}
               <button
                 type="button"
                 onClick={() => onRefresh()}
@@ -80,14 +96,23 @@ export default function Navbar({
                 aria-busy={isRefreshing}
                 title="Fetch the latest portfolio data"
               >
-                <svg className={isRefreshing ? styles.refreshing : ""} viewBox="0 0 24 24" aria-hidden="true"><path d="M20 7v5h-5M4 17v-5h5" strokeLinecap="round" strokeLinejoin="round"/><path d="M6.1 7a7 7 0 0 1 11.6-1L20 9M4 15l2.3 3A7 7 0 0 0 17.9 17" strokeLinecap="round"/></svg>
+                <svg className={isRefreshing ? styles.refreshing : ""} viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M20 7v5h-5M4 17v-5h5" strokeLinecap="round" strokeLinejoin="round" />
+                  <path d="M6.1 7a7 7 0 0 1 11.6-1L20 9M4 15l2.3 3A7 7 0 0 0 17.9 17" strokeLinecap="round" />
+                </svg>
                 <span className={styles.refreshLabel}>{isRefreshing ? "Refreshing" : "Refresh"}</span>
               </button>
             </>
           )}
 
-          <button type="button" onClick={toggleDarkMode} className={styles.iconButton} aria-label={darkMode ? "Use light theme" : "Use dark theme"}>
-            <ThemeIcon darkMode={darkMode}/>
+          <button
+            type="button"
+            onClick={toggleDarkMode}
+            className={styles.iconButton}
+            aria-label={darkMode ? "Use light theme" : "Use dark theme"}
+            title={darkMode ? "Switch to light theme" : "Switch to dark theme"}
+          >
+            <ThemeIcon darkMode={darkMode} />
           </button>
         </div>
       </div>

@@ -1,6 +1,7 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import dynamic from "next/dynamic";
 import { usePortfolioData } from "../hooks/usePortfolioData";
+import { useTheme } from "../hooks/useTheme";
 import Navbar from "../components/Layout/Navbar";
 import LoadingSpinner from "../components/Common/LoadingSpinner";
 import SeoHead from "../components/Common/SeoHead";
@@ -38,33 +39,8 @@ function formatPerformance(value) {
 
 export default function Home() {
   const { stockHoldings, currencyHoldings, chart, isLoading, isRefreshing, error, updatedAt, isStale, accounts, selectedAccountIds, loadDataForAccounts, refreshData } = usePortfolioData();
+  const { darkMode, toggleDarkMode } = useTheme();
   const [activeTab, setActiveTab] = useState("performance");
-  const [darkMode, setDarkMode] = useState(() => {
-    if (typeof window === "undefined") return false;
-    const storedTheme = window.localStorage.getItem("portfolio-theme");
-    return storedTheme ? storedTheme === "dark" : window.matchMedia("(prefers-color-scheme: dark)").matches;
-  });
-
-  useEffect(() => {
-    const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
-    const handleChange = (event) => {
-      if (!localStorage.getItem("portfolio-theme")) setDarkMode(event.matches);
-    };
-    mediaQuery.addEventListener?.("change", handleChange);
-    return () => mediaQuery.removeEventListener?.("change", handleChange);
-  }, []);
-
-  useEffect(() => {
-    document.documentElement.dataset.theme = darkMode ? "dark" : "light";
-  }, [darkMode]);
-
-  const toggleDarkMode = () => {
-    setDarkMode((current) => {
-      const next = !current;
-      localStorage.setItem("portfolio-theme", next ? "dark" : "light");
-      return next;
-    });
-  };
 
   const summary = useMemo(() => {
     const lastPoint = chart.at(-1);
@@ -112,25 +88,66 @@ export default function Home() {
 
       <main className={styles.page}>
         {error && <p className={styles.dataError} role="alert">{error}{updatedAt && " Showing the last loaded data."}</p>}
+
         <section className={styles.metricsGrid} aria-label="Portfolio summary">
           <div className={styles.metric}>
-            <span className={styles.metricLabel}>Net performance</span>
-            <span className={`${styles.metricValue} ${summary.currentPerformance >= 0 ? styles.positive : styles.negative}`}>{formatPerformance(summary.currentPerformance)}</span>
+            <div className={styles.metricHeader}>
+              <span className={styles.metricLabel}>Net performance</span>
+              {Number.isFinite(summary.currentPerformance) && (
+                <span className={`${styles.trendPill} ${summary.currentPerformance >= 0 ? styles.trendPillPositive : styles.trendPillNegative}`} aria-hidden="true">
+                  {summary.currentPerformance >= 0 ? "↗" : "↘"}
+                </span>
+              )}
+            </div>
+            <div className={styles.metricValueRow}>
+              <span className={`${styles.metricValue} ${summary.currentPerformance >= 0 ? styles.positive : styles.negative}`}>
+                {formatPerformance(summary.currentPerformance)}
+              </span>
+            </div>
             <span className={styles.metricNote}>Latest available close</span>
           </div>
+
           <div className={styles.metric}>
-            <span className={styles.metricLabel}>Period movement</span>
-            <span className={`${styles.metricValue} ${summary.periodChange >= 0 ? styles.positive : styles.negative}`}>{formatPerformance(summary.periodChange)}</span>
+            <div className={styles.metricHeader}>
+              <span className={styles.metricLabel}>Period movement</span>
+              {Number.isFinite(summary.periodChange) && (
+                <span className={`${styles.trendPill} ${summary.periodChange >= 0 ? styles.trendPillPositive : styles.trendPillNegative}`} aria-hidden="true">
+                  {summary.periodChange >= 0 ? "↗" : "↘"}
+                </span>
+              )}
+            </div>
+            <div className={styles.metricValueRow}>
+              <span className={`${styles.metricValue} ${summary.periodChange >= 0 ? styles.positive : styles.negative}`}>
+                {formatPerformance(summary.periodChange)}
+              </span>
+            </div>
             <span className={styles.metricNote}>{chart.length} recorded sessions</span>
           </div>
+
           <div className={styles.metric}>
-            <span className={styles.metricLabel}>Largest position</span>
-            <span className={styles.metricValue}>{summary.topHolding?.symbol || "--"}</span>
-            <span className={styles.metricNote}>{summary.topHolding ? `${(summary.topHolding.allocationInPercentage * 100).toFixed(2)}% allocation` : "No holdings available"}</span>
+            <div className={styles.metricHeader}>
+              <span className={styles.metricLabel}>Largest position</span>
+            </div>
+            <div className={styles.metricValueRow}>
+              <span className={styles.metricValue}>{summary.topHolding?.symbol || "--"}</span>
+            </div>
+            <span className={styles.metricNote}>
+              {summary.topHolding ? `${(summary.topHolding.allocationInPercentage * 100).toFixed(2)}% allocation` : "No holdings available"}
+            </span>
+            {summary.topHolding && (
+              <div className={styles.metricBarTrack} aria-hidden="true">
+                <span className={styles.metricBarFill} style={{ width: `${Math.min(100, summary.topHolding.allocationInPercentage * 100)}%` }} />
+              </div>
+            )}
           </div>
+
           <div className={styles.metric}>
-            <span className={styles.metricLabel}>Portfolio breadth</span>
-            <span className={styles.metricValue}>{stockHoldings.length || "--"}</span>
+            <div className={styles.metricHeader}>
+              <span className={styles.metricLabel}>Portfolio breadth</span>
+            </div>
+            <div className={styles.metricValueRow}>
+              <span className={styles.metricValue}>{stockHoldings.length || "--"}</span>
+            </div>
             <span className={styles.metricNote}>{currencyHoldings.length} currency exposures</span>
           </div>
         </section>
@@ -138,28 +155,20 @@ export default function Home() {
         <section className={styles.dashboardShell}>
           <div className={styles.tabsBar}>
             <div className={styles.navTabs} role="tablist" aria-label="Portfolio views">
-              {tabs.map((tab) => {
-                const content = (
-                  <>
-                    <TabIcon type={tab.icon} />
-                    {tab.label}
-                    {tabCounts[tab.id] !== undefined && <span className={styles.tabCount}>{tabCounts[tab.id]}</span>}
-                  </>
-                );
-
-                return (
-                  <button
-                    type="button"
-                    key={tab.id}
-                    role="tab"
-                    aria-selected={activeTab === tab.id}
-                    className={`${styles.tabButton} ${activeTab === tab.id ? styles.tabButtonActive : ""}`}
-                    onClick={() => setActiveTab(tab.id)}
-                  >
-                    {content}
-                  </button>
-                );
-              })}
+              {tabs.map((tab) => (
+                <button
+                  type="button"
+                  key={tab.id}
+                  role="tab"
+                  aria-selected={activeTab === tab.id}
+                  className={`${styles.tabButton} ${activeTab === tab.id ? styles.tabButtonActive : ""}`}
+                  onClick={() => setActiveTab(tab.id)}
+                >
+                  <TabIcon type={tab.icon} />
+                  {tab.label}
+                  {tabCounts[tab.id] !== undefined && <span className={styles.tabCount}>{tabCounts[tab.id]}</span>}
+                </button>
+              ))}
             </div>
             <span className={styles.sectionMeta}>Base currency normalized</span>
           </div>

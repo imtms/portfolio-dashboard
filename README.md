@@ -112,3 +112,28 @@ Recommended production extension path:
 6. Add notifications based on metric observation frequency and overdue unresolved questions.
 
 The module deliberately does not execute trades, prescribe automatic scores, or assume real-time market/news feeds.
+
+## Container development and tests
+
+Source stays in this directory; Linux dependencies and Next.js output live in separate Docker volumes. Use Docker / Compose (Kiri on this Mac):
+
+```sh
+docker compose -f compose.dev.yaml run --rm dev npm ci --no-audit --no-fund
+docker compose -f compose.dev.yaml run --rm dev sh -c 'npm run lint && npm run test:data && npm run build'
+docker compose -f compose.dev.yaml up dev
+# http://127.0.0.1:3000
+docker compose -f compose.dev.yaml down
+```
+
+Repeat `npm ci` after lockfile changes. `down` keeps dependencies; `down -v` removes the disposable dependency and build-cache volumes. Do not share native `node_modules` with the container.
+
+Browser checks use Playwright 1.62.0 / Chromium, matching the lockfile:
+
+```sh
+docker compose -f compose.dev.yaml up -d dev
+docker compose -f compose.dev.yaml --profile browser run --build --rm browser
+docker compose -f compose.dev.yaml run --rm dev npm run test:articles
+docker compose -f compose.dev.yaml down
+```
+
+The browser regression mocks account responses. Update `Dockerfile.browser.dev` when upgrading the locked Playwright version.

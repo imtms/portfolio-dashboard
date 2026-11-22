@@ -1,6 +1,47 @@
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import * as echarts from "echarts";
 import styles from "../../styles/Dashboard.module.css";
+
+const RANGES = [
+  { id: "1M", label: "1M", days: 30 },
+  { id: "3M", label: "3M", days: 90 },
+  { id: "6M", label: "6M", days: 180 },
+  { id: "YTD", label: "YTD", ytd: true },
+  { id: "1Y", label: "1Y", days: 365 },
+  { id: "ALL", label: "ALL" },
+];
+
+function parseDate(value) {
+  const parsed = Date.parse(value);
+  return Number.isNaN(parsed) ? null : parsed;
+}
+
+function sliceByRange(data, rangeId) {
+  if (!data.length || rangeId === "ALL") return data;
+  const lastTime = parseDate(data.at(-1)?.date);
+  if (lastTime === null) return data;
+
+  let cutoff;
+  if (rangeId === "YTD") {
+    const year = new Date(lastTime).getUTCFullYear();
+    cutoff = Date.UTC(year, 0, 1);
+  } else {
+    const range = RANGES.find((item) => item.id === rangeId);
+    if (!range?.days) return data;
+    cutoff = lastTime - range.days * 24 * 60 * 60 * 1000;
+  }
+
+  const filtered = data.filter((item) => {
+    const time = parseDate(item.date);
+    return time !== null && time >= cutoff;
+  });
+  return filtered.length >= 2 ? filtered : data;
+}
+
+function formatPct(value) {
+  if (!Number.isFinite(value)) return "--";
+  return `${value >= 0 ? "+" : ""}${value.toFixed(2)}%`;
+}
 
 function EmptyState() {
   return (
@@ -17,10 +58,34 @@ function EmptyState() {
 export default function PerformanceChart({ data, darkMode }) {
   const chartRef = useRef(null);
   const chartInstance = useRef(null);
-  const latest = Number(data.at(-1)?.netPerformanceInPercentage);
+  const [range, setRange] = useState("ALL");
+
+  const visibleData = useMemo(() => sliceByRange(data, range), [data, range]);
+
+  const spanDays = useMemo(() => {
+    if (data.length < 2) return 0;
+    const first = parseDate(data[0]?.date);
+    const last = parseDate(data.at(-1)?.date);
+    if (first === null || last === null) return 0;
+    return Math.max(0, (last - first) / (24 * 60 * 60 * 1000));
+  }, [data]);
+
+  const stats = useMemo(() => {
+    if (!visibleData.length) return { latest: NaN, delta: NaN, high: NaN, low: NaN };
+    const values = visibleData.map((item) => Number(item.netPerformanceInPercentage)).filter(Number.isFinite);
+    if (!values.length) return { latest: NaN, delta: NaN, high: NaN, low: NaN };
+    const first = values[0];
+    const latest = values.at(-1);
+    return {
+      latest,
+      delta: latest - first,
+      high: Math.max(...values),
+      low: Math.min(...values),
+    };
+  }, [visibleData]);
 
   const palette = useMemo(() => {
-    void darkMode; // Re-read CSS theme tokens when the active theme changes.
+    void darkMode;
     if (typeof window === "undefined") return {};
     const computed = getComputedStyle(document.documentElement);
     return {
@@ -34,60 +99,67 @@ export default function PerformanceChart({ data, darkMode }) {
   }, [darkMode]);
 
   const option = useMemo(() => ({
-    animationDuration: 550,
+    animationDuration: 480,
     animationEasing: "cubicOut",
     tooltip: {
       trigger: "axis",
       backgroundColor: palette.tooltip,
       borderColor: palette.border,
       borderWidth: 1,
-      padding: [10, 12],
-      textStyle: { color: palette.foreground, fontFamily: "SFMono-Regular, Consolas, monospace", fontSize: 12 },
+      padding: [10, 14],
+      textStyle: { color: palette.foreground, fontFamily: "JetBrains Mono, SFMono-Regular, Consolas, monospace", fontSize: 12 },
       formatter: (params) => {
         const point = params[0];
         const value = Number(point.value);
-        return `<span style="color:${palette.muted}">${point.axisValue}</span><br/><strong>${value >= 0 ? "+" : ""}${value.toFixed(2)}%</strong>`;
+        return `<span style="color:${palette.muted};font-size:11px">${point.axisValue}</span><br/><strong style="font-size:14px">${value >= 0 ? "+" : ""}${value.toFixed(2)}%</strong>`;
       },
       axisPointer: { type: "line", lineStyle: { color: palette.border, type: "dashed" } },
     },
-    grid: { left: 16, right: 24, top: 28, bottom: 12, containLabel: true },
+    grid: { left: 16, right: 24, top: 26, bottom: 16, containLabel: true },
     xAxis: {
       type: "category",
       boundaryGap: false,
-      data: data.map((item) => item.date),
+      data: visibleData.map((item) => item.date),
       axisTick: { show: false },
-      axisLabel: { color: palette.muted, fontFamily: "SFMono-Regular, Consolas, monospace", fontSize: 10, hideOverlap: true, margin: 16 },
+      axisLabel: { color: palette.muted, fontFamily: "JetBrains Mono, SFMono-Regular, Consolas, monospace", fontSize: 10, hideOverlap: true, margin: 14 },
       axisLine: { lineStyle: { color: palette.grid } },
     },
     yAxis: {
       type: "value",
       scale: true,
-      axisLabel: { formatter: (value) => `${value}%`, color: palette.muted, fontFamily: "SFMono-Regular, Consolas, monospace", fontSize: 10 },
+      axisLabel: { formatter: (value) => `${value}%`, color: palette.muted, fontFamily: "JetBrains Mono, SFMono-Regular, Consolas, monospace", fontSize: 10 },
       axisLine: { show: false },
       axisTick: { show: false },
       splitNumber: 5,
       splitLine: { lineStyle: { color: palette.grid, type: "dashed" } },
     },
     series: [{
-      data: data.map((item) => Number(item.netPerformanceInPercentage.toFixed(2))),
+      data: visibleData.map((item) => Number(item.netPerformanceInPercentage.toFixed(2))),
       type: "line",
-      smooth: 0.25,
+      smooth: 0.22,
       showSymbol: false,
       symbolSize: 7,
-      lineStyle: { color: palette.accent, width: 2 },
+      lineStyle: { color: palette.accent, width: 2.2 },
       itemStyle: { color: palette.accent, borderColor: palette.tooltip, borderWidth: 2 },
       emphasis: { focus: "series", scale: true },
+      markLine: {
+        silent: true,
+        symbol: "none",
+        lineStyle: { color: palette.border, type: "dashed", width: 1 },
+        label: { show: false },
+        data: [{ yAxis: 0 }],
+      },
       areaStyle: {
         color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-          { offset: 0, color: darkMode ? "rgba(78, 190, 145, 0.22)" : "rgba(20, 140, 96, 0.18)" },
-          { offset: 1, color: darkMode ? "rgba(78, 190, 145, 0.01)" : "rgba(20, 140, 96, 0.01)" },
+          { offset: 0, color: darkMode ? "rgba(86, 198, 154, 0.24)" : "rgba(22, 138, 97, 0.18)" },
+          { offset: 1, color: darkMode ? "rgba(86, 198, 154, 0.01)" : "rgba(22, 138, 97, 0.005)" },
         ]),
       },
     }],
-  }), [data, darkMode, palette]);
+  }), [visibleData, darkMode, palette]);
 
   useEffect(() => {
-    if (!chartRef.current || !data.length) return undefined;
+    if (!chartRef.current || !visibleData.length) return undefined;
     chartInstance.current = echarts.init(chartRef.current);
     chartInstance.current.setOption(option);
     const observer = new ResizeObserver(() => chartInstance.current?.resize());
@@ -97,7 +169,7 @@ export default function PerformanceChart({ data, darkMode }) {
       chartInstance.current?.dispose();
       chartInstance.current = null;
     };
-  }, [data.length, option]);
+  }, [visibleData.length, option]);
 
   if (!data.length) return <EmptyState />;
 
@@ -109,12 +181,64 @@ export default function PerformanceChart({ data, darkMode }) {
           <h2 className={styles.panelTitle}>Portfolio performance</h2>
           <p className={styles.panelDescription}>Net performance across the selected account scope.</p>
         </div>
-        <div className={styles.panelStat}>
-          <span className={styles.panelLabel}>Latest</span>
-          <span className={`${styles.panelStatValue} ${latest >= 0 ? styles.positive : styles.negative}`}>{latest >= 0 ? "+" : ""}{latest.toFixed(2)}%</span>
+
+        <div className={styles.panelControls}>
+          <div className={styles.rangeGroup} role="group" aria-label="Chart timeframe">
+            {RANGES.map((item) => {
+              const disabled = Boolean(item.days && spanDays < item.days * 0.6);
+              return (
+                <button
+                  key={item.id}
+                  type="button"
+                  disabled={disabled}
+                  onClick={() => setRange(item.id)}
+                  className={`${styles.rangeButton} ${range === item.id ? styles.rangeButtonActive : ""}`}
+                  aria-pressed={range === item.id}
+                >
+                  {item.label}
+                </button>
+              );
+            })}
+          </div>
+
+          <div className={styles.panelStat}>
+            <span className={styles.panelLabel}>Latest</span>
+            <span className={`${styles.panelStatValue} ${stats.latest >= 0 ? styles.positive : styles.negative}`}>
+              {formatPct(stats.latest)}
+            </span>
+          </div>
         </div>
       </div>
-      <div className={styles.chartFrame}><div ref={chartRef} className={styles.chartContainer} /></div>
+
+      <div className={styles.chartFrame}>
+        <div className={styles.chartStatsBar}>
+          <div className={styles.chartStatItem}>
+            <span className={styles.panelLabel}>Range change</span>
+            <span className={`${styles.chartStatValue} ${stats.delta >= 0 ? styles.positive : styles.negative}`}>
+              {formatPct(stats.delta)}
+            </span>
+          </div>
+          <div className={styles.chartStatItem}>
+            <span className={styles.panelLabel}>Range high</span>
+            <span className={`${styles.chartStatValue} ${stats.high >= 0 ? styles.positive : styles.negative}`}>
+              {formatPct(stats.high)}
+            </span>
+          </div>
+          <div className={styles.chartStatItem}>
+            <span className={styles.panelLabel}>Range low</span>
+            <span className={`${styles.chartStatValue} ${stats.low >= 0 ? styles.positive : styles.negative}`}>
+              {formatPct(stats.low)}
+            </span>
+          </div>
+          <div className={styles.chartStatItem}>
+            <span className={styles.panelLabel}>Window</span>
+            <span className={styles.chartStatValue}>
+              {visibleData[0]?.date} – {visibleData.at(-1)?.date}
+            </span>
+          </div>
+        </div>
+        <div ref={chartRef} className={styles.chartContainer} />
+      </div>
     </div>
   );
 }

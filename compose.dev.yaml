@@ -1,0 +1,45 @@
+name: portfolio-local
+services:
+  dev:
+    image: node:24.18.1-bookworm
+    working_dir: /workspace
+    environment:
+      WATCHPACK_POLLING: "true"
+      CHOKIDAR_USEPOLLING: "true"
+      npm_config_cache: /tmp/npm-cache
+      BUN_INSTALL_CACHE_DIR: /tmp/bun-cache
+    volumes:
+      - .:/workspace
+      - type: volume
+        source: node_modules
+        target: /workspace/node_modules
+        volume:
+          nocopy: true
+      - type: volume
+        source: next
+        target: /workspace/.next
+        volume:
+          nocopy: true
+    ports:
+      - "127.0.0.1:3000:3000"
+    command: ["npm", "run", "dev", "--", "--hostname", "0.0.0.0"]
+  browser:
+    profiles: ["browser"]
+    build:
+      context: .
+      dockerfile: Dockerfile.browser.dev
+    working_dir: /workspace
+    environment:
+      PORTFOLIO_TEST_URL: http://dev:3000
+    volumes:
+      - .:/workspace
+      - type: volume
+        source: node_modules
+        target: /workspace/node_modules
+        volume:
+          nocopy: true
+    shm_size: 1gb
+    command: ["npm", "run", "test:portfolio"]
+volumes:
+  node_modules:
+  next:

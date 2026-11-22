@@ -1,8 +1,8 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import * as echarts from "echarts";
 import styles from "../../styles/Dashboard.module.css";
 
-const chartColors = ["#168a61", "#4f8f78", "#78a69a", "#9f8c5d", "#877f9f", "#5f7c91", "#b06f66", "#6e9270"];
+const chartColors = ["#168a61", "#3b8c7d", "#5b9ea0", "#9f8c5d", "#7b78a6", "#547794", "#b56c63", "#6d9470"];
 const analysisBaseUrl = "https://xh.tms.im";
 
 function getAnalysisUrl(symbol) {
@@ -44,9 +44,11 @@ export default function StockHoldings({ holdings, darkMode }) {
   const chartInstance = useRef(null);
   const [sortBy, setSortBy] = useState("allocationInPercentage");
   const [sortOrder, setSortOrder] = useState("desc");
+  const [query, setQuery] = useState("");
+  const [activeSymbol, setActiveSymbol] = useState(null);
 
   const palette = useMemo(() => {
-    void darkMode; // Re-read CSS theme tokens when the active theme changes.
+    void darkMode;
     if (typeof window === "undefined") return {};
     const computed = getComputedStyle(document.documentElement);
     return {
@@ -66,36 +68,42 @@ export default function StockHoldings({ holdings, darkMode }) {
       itemStyle: { color: chartColors[index % chartColors.length] },
     })), [holdings]);
 
+  const chartIndexBySymbol = useMemo(() => {
+    const map = new Map();
+    chartData.forEach((item, idx) => map.set(item.name, idx));
+    return map;
+  }, [chartData]);
+
   const option = useMemo(() => ({
-    animationDuration: 500,
+    animationDuration: 480,
     tooltip: {
       trigger: "item",
       backgroundColor: palette.tooltip,
       borderColor: palette.border,
       borderWidth: 1,
       padding: [10, 12],
-      textStyle: { color: palette.foreground, fontFamily: "SFMono-Regular, Consolas, monospace", fontSize: 12 },
+      textStyle: { color: palette.foreground, fontFamily: "JetBrains Mono, SFMono-Regular, Consolas, monospace", fontSize: 12 },
       formatter: ({ name, value }) => `<strong>${name}</strong><br/><span style="color:${palette.muted}">${Number(value).toFixed(2)}% allocation</span>`,
     },
     title: {
       text: `${holdings.length}`,
       subtext: "ASSETS",
       left: "center",
-      top: "42%",
-      textStyle: { color: palette.foreground, fontFamily: "SFMono-Regular, Consolas, monospace", fontSize: 24, fontWeight: 600 },
-      subtextStyle: { color: palette.muted, fontFamily: "SFMono-Regular, Consolas, monospace", fontSize: 9 },
+      top: "41%",
+      textStyle: { color: palette.foreground, fontFamily: "JetBrains Mono, SFMono-Regular, Consolas, monospace", fontSize: 24, fontWeight: 650 },
+      subtextStyle: { color: palette.muted, fontFamily: "JetBrains Mono, SFMono-Regular, Consolas, monospace", fontSize: 9 },
     },
     series: [{
       name: "Stock allocation",
       type: "pie",
-      radius: ["56%", "76%"],
+      radius: ["56%", "77%"],
       center: ["50%", "50%"],
       minAngle: 2,
-      padAngle: 1,
-      itemStyle: { borderRadius: 3, borderColor: palette.surface, borderWidth: 2 },
+      padAngle: 1.5,
+      itemStyle: { borderRadius: 4, borderColor: palette.surface, borderWidth: 2 },
       label: { show: false },
       labelLine: { show: false },
-      emphasis: { scaleSize: 4 },
+      emphasis: { scaleSize: 5 },
       data: chartData,
     }],
   }), [chartData, holdings.length, palette]);
@@ -113,12 +121,37 @@ export default function StockHoldings({ holdings, darkMode }) {
     };
   }, [holdings.length, option]);
 
-  const sortedHoldings = useMemo(() => [...holdings].sort((a, b) => {
-    const valA = typeof a[sortBy] === "string" ? a[sortBy].toUpperCase() : a[sortBy];
-    const valB = typeof b[sortBy] === "string" ? b[sortBy].toUpperCase() : b[sortBy];
-    if (valA === valB) return 0;
-    return (valA < valB ? -1 : 1) * (sortOrder === "asc" ? 1 : -1);
-  }), [holdings, sortBy, sortOrder]);
+  const highlightSlice = useCallback((symbol) => {
+    setActiveSymbol(symbol);
+    const idx = chartIndexBySymbol.get(symbol);
+    if (idx !== undefined && chartInstance.current) {
+      chartInstance.current.dispatchAction({ type: "highlight", seriesIndex: 0, dataIndex: idx });
+      chartInstance.current.dispatchAction({ type: "showTip", seriesIndex: 0, dataIndex: idx });
+    }
+  }, [chartIndexBySymbol]);
+
+  const clearHighlight = useCallback((symbol) => {
+    setActiveSymbol((prev) => (prev === symbol ? null : prev));
+    const idx = chartIndexBySymbol.get(symbol);
+    if (idx !== undefined && chartInstance.current) {
+      chartInstance.current.dispatchAction({ type: "downplay", seriesIndex: 0, dataIndex: idx });
+      chartInstance.current.dispatchAction({ type: "hideTip" });
+    }
+  }, [chartIndexBySymbol]);
+
+  const filteredAndSortedHoldings = useMemo(() => {
+    const normalizedQuery = query.trim().toLowerCase();
+    const list = normalizedQuery
+      ? holdings.filter((h) => h.symbol.toLowerCase().includes(normalizedQuery) || h.name.toLowerCase().includes(normalizedQuery))
+      : holdings;
+
+    return [...list].sort((a, b) => {
+      const valA = typeof a[sortBy] === "string" ? a[sortBy].toUpperCase() : a[sortBy];
+      const valB = typeof b[sortBy] === "string" ? b[sortBy].toUpperCase() : b[sortBy];
+      if (valA === valB) return 0;
+      return (valA < valB ? -1 : 1) * (sortOrder === "asc" ? 1 : -1);
+    });
+  }, [holdings, query, sortBy, sortOrder]);
 
   const handleSort = (column) => {
     if (sortBy === column) setSortOrder((order) => order === "asc" ? "desc" : "asc");
@@ -129,6 +162,8 @@ export default function StockHoldings({ holdings, darkMode }) {
   };
 
   if (!holdings.length) return <EmptyState />;
+
+  const extraCount = Math.max(0, chartData.length - 8);
 
   return (
     <div>
@@ -146,44 +181,109 @@ export default function StockHoldings({ holdings, darkMode }) {
 
       <div className={styles.holdingsLayout}>
         <section className={styles.allocationPanel}>
-          <div className={styles.subPanelHeader}><h3 className={styles.subPanelTitle}>Allocation map</h3><span className={styles.sectionMeta}>100% total</span></div>
-          <div ref={chartRef} className={styles.chartContainer} />
+          <div className={styles.subPanelHeader}>
+            <h3 className={styles.subPanelTitle}>Allocation map</h3>
+            <span className={styles.sectionMeta}>100% total</span>
+          </div>
+          <div ref={chartRef} className={styles.donutContainer} />
           <div className={styles.chartLegend}>
             {chartData.slice(0, 8).map((item, index) => (
-              <div className={styles.legendItem} key={item.name}>
-                <span className={styles.legendName}><span className={styles.legendDot} style={{ background: chartColors[index % chartColors.length] }} /><span className={styles.legendText}>{item.name}</span></span>
+              <div
+                className={`${styles.legendItem} ${activeSymbol === item.name ? styles.legendItemActive : ""}`}
+                key={item.name}
+                onMouseEnter={() => highlightSlice(item.name)}
+                onMouseLeave={() => clearHighlight(item.name)}
+              >
+                <span className={styles.legendName}>
+                  <span className={styles.legendDot} style={{ background: chartColors[index % chartColors.length] }} />
+                  <span className={styles.legendText}>{item.name}</span>
+                </span>
                 <span className={styles.legendValue}>{item.value.toFixed(2)}%</span>
               </div>
             ))}
+            {extraCount > 0 && (
+              <div className={styles.legendMore}>+{extraCount} additional {extraCount === 1 ? "position" : "positions"} in table</div>
+            )}
           </div>
         </section>
 
         <section className={styles.tablePanel}>
-          <div className={styles.subPanelHeader}><h3 className={styles.subPanelTitle}>Position detail</h3><span className={styles.sectionMeta}>Click header to sort</span></div>
+          <div className={styles.subPanelHeader}>
+            <h3 className={styles.subPanelTitle}>
+              Position detail {query.trim() ? `(${filteredAndSortedHoldings.length}/${holdings.length})` : ""}
+            </h3>
+            <div className={styles.searchWrap}>
+              <svg className={styles.searchIcon} viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <circle cx="11" cy="11" r="7" stroke="currentColor" strokeWidth="1.8" />
+                <path d="m20 20-3.5-3.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+              </svg>
+              <input
+                type="search"
+                value={query}
+                onChange={(event) => setQuery(event.target.value)}
+                placeholder="Filter symbol or name..."
+                aria-label="Filter asset holdings"
+                className={styles.searchInput}
+              />
+              {query && (
+                <button type="button" onClick={() => setQuery("")} className={styles.clearButton} aria-label="Clear filter">
+                  ×
+                </button>
+              )}
+            </div>
+          </div>
+
           <div className={styles.tableContainer}>
-            <table className={styles.customTable}>
-              <thead><tr><SortHeader column="symbol" sortBy={sortBy} sortOrder={sortOrder} onSort={handleSort}>Symbol</SortHeader><SortHeader column="name" sortBy={sortBy} sortOrder={sortOrder} onSort={handleSort}>Instrument</SortHeader><SortHeader column="netPerformancePercent" numeric sortBy={sortBy} sortOrder={sortOrder} onSort={handleSort}>Return</SortHeader><SortHeader column="allocationInPercentage" numeric sortBy={sortBy} sortOrder={sortOrder} onSort={handleSort}>Allocation</SortHeader></tr></thead>
-              <tbody>
-                {sortedHoldings.map((holding) => (
-                  <tr key={`${holding.symbol}-${holding.name}`}>
-                    <td className={styles.symbolCell}>
-                      <a
-                        className={styles.symbolLink}
-                        href={getAnalysisUrl(holding.symbol)}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        aria-label={`Analyze ${holding.symbol} on Xiheng`}
-                      >
-                        {holding.symbol}
-                      </a>
-                    </td>
-                    <td className={styles.nameCell} title={holding.name}>{holding.name}</td>
-                    <td className={`${styles.numeric} ${styles.numberCell} ${holding.netPerformancePercent >= 0 ? styles.positive : styles.negative}`}>{holding.netPerformancePercent >= 0 ? "+" : ""}{(holding.netPerformancePercent * 100).toFixed(2)}%</td>
-                    <td className={`${styles.numeric} ${styles.numberCell}`}><span className={styles.allocationCell}><span className={styles.allocationTrack}><span className={styles.allocationFill} style={{ width: `${Math.min(100, holding.allocationInPercentage * 100)}%` }} /></span>{(holding.allocationInPercentage * 100).toFixed(2)}%</span></td>
+            {filteredAndSortedHoldings.length > 0 ? (
+              <table className={styles.customTable}>
+                <thead>
+                  <tr>
+                    <SortHeader column="symbol" sortBy={sortBy} sortOrder={sortOrder} onSort={handleSort}>Symbol</SortHeader>
+                    <SortHeader column="name" sortBy={sortBy} sortOrder={sortOrder} onSort={handleSort}>Instrument</SortHeader>
+                    <SortHeader column="netPerformancePercent" numeric sortBy={sortBy} sortOrder={sortOrder} onSort={handleSort}>Return</SortHeader>
+                    <SortHeader column="allocationInPercentage" numeric sortBy={sortBy} sortOrder={sortOrder} onSort={handleSort}>Allocation</SortHeader>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {filteredAndSortedHoldings.map((holding) => (
+                    <tr
+                      key={`${holding.symbol}-${holding.name}`}
+                      onMouseEnter={() => highlightSlice(holding.symbol)}
+                      onMouseLeave={() => clearHighlight(holding.symbol)}
+                    >
+                      <td className={styles.symbolCell}>
+                        <a
+                          className={styles.symbolLink}
+                          href={getAnalysisUrl(holding.symbol)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          aria-label={`Analyze ${holding.symbol} on Xiheng`}
+                        >
+                          {holding.symbol}
+                          <span className={styles.symbolArrow} aria-hidden="true">↗</span>
+                        </a>
+                      </td>
+                      <td className={styles.nameCell} title={holding.name}>{holding.name}</td>
+                      <td className={`${styles.numeric} ${styles.numberCell}`}>
+                        <span className={`${styles.returnPill} ${holding.netPerformancePercent >= 0 ? styles.returnPositive : styles.returnNegative}`}>
+                          {holding.netPerformancePercent >= 0 ? "+" : ""}{(holding.netPerformancePercent * 100).toFixed(2)}%
+                        </span>
+                      </td>
+                      <td className={`${styles.numeric} ${styles.numberCell}`}>
+                        <span className={styles.allocationCell}>
+                          <span className={styles.allocationTrack}>
+                            <span className={styles.allocationFill} style={{ width: `${Math.min(100, holding.allocationInPercentage * 100)}%` }} />
+                          </span>
+                          {(holding.allocationInPercentage * 100).toFixed(2)}%
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            ) : (
+              <div className={styles.emptyTableMessage}>No positions match &ldquo;{query.trim()}&rdquo;.</div>
+            )}
           </div>
         </section>
       </div>

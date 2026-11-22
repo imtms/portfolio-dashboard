@@ -1,8 +1,8 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import * as echarts from "echarts";
 import styles from "../../styles/Dashboard.module.css";
 
-const chartColors = ["#168a61", "#5f7c91", "#9f8c5d", "#877f9f", "#b06f66", "#6e9270"];
+const chartColors = ["#168a61", "#547794", "#9f8c5d", "#7b78a6", "#b56c63", "#6d9470"];
 
 function SortIcon({ active, order }) {
   return (
@@ -37,9 +37,10 @@ export default function CurrencyHoldings({ holdings, darkMode }) {
   const chartInstance = useRef(null);
   const [sortBy, setSortBy] = useState("percentage");
   const [sortOrder, setSortOrder] = useState("desc");
+  const [activeCurrency, setActiveCurrency] = useState(null);
 
   const palette = useMemo(() => {
-    void darkMode; // Re-read CSS theme tokens when the active theme changes.
+    void darkMode;
     if (typeof window === "undefined") return {};
     const computed = getComputedStyle(document.documentElement);
     return {
@@ -53,38 +54,48 @@ export default function CurrencyHoldings({ holdings, darkMode }) {
 
   const chartData = useMemo(() => [...holdings]
     .sort((a, b) => b.percentage - a.percentage)
-    .map((holding, index) => ({ value: Number(holding.percentage.toFixed(2)), name: holding.currency, itemStyle: { color: chartColors[index % chartColors.length] } })), [holdings]);
+    .map((holding, index) => ({
+      value: Number(holding.percentage.toFixed(2)),
+      name: holding.currency,
+      itemStyle: { color: chartColors[index % chartColors.length] },
+    })), [holdings]);
+
+  const indexByCurrency = useMemo(() => {
+    const map = new Map();
+    chartData.forEach((item, idx) => map.set(item.name, { idx, color: item.itemStyle.color }));
+    return map;
+  }, [chartData]);
 
   const option = useMemo(() => ({
-    animationDuration: 500,
+    animationDuration: 480,
     tooltip: {
       trigger: "item",
       backgroundColor: palette.tooltip,
       borderColor: palette.border,
       borderWidth: 1,
       padding: [10, 12],
-      textStyle: { color: palette.foreground, fontFamily: "SFMono-Regular, Consolas, monospace", fontSize: 12 },
+      textStyle: { color: palette.foreground, fontFamily: "JetBrains Mono, SFMono-Regular, Consolas, monospace", fontSize: 12 },
       formatter: ({ name, value }) => `<strong>${name}</strong><br/><span style="color:${palette.muted}">${Number(value).toFixed(2)}% exposure</span>`,
     },
     title: {
       text: `${holdings.length}`,
       subtext: "CURRENCIES",
       left: "center",
-      top: "42%",
-      textStyle: { color: palette.foreground, fontFamily: "SFMono-Regular, Consolas, monospace", fontSize: 24, fontWeight: 600 },
-      subtextStyle: { color: palette.muted, fontFamily: "SFMono-Regular, Consolas, monospace", fontSize: 9 },
+      top: "41%",
+      textStyle: { color: palette.foreground, fontFamily: "JetBrains Mono, SFMono-Regular, Consolas, monospace", fontSize: 24, fontWeight: 650 },
+      subtextStyle: { color: palette.muted, fontFamily: "JetBrains Mono, SFMono-Regular, Consolas, monospace", fontSize: 9 },
     },
     series: [{
       name: "Currency allocation",
       type: "pie",
-      radius: ["56%", "76%"],
+      radius: ["56%", "77%"],
       center: ["50%", "50%"],
       minAngle: 2,
-      padAngle: 1,
-      itemStyle: { borderRadius: 3, borderColor: palette.surface, borderWidth: 2 },
+      padAngle: 1.5,
+      itemStyle: { borderRadius: 4, borderColor: palette.surface, borderWidth: 2 },
       label: { show: false },
       labelLine: { show: false },
-      emphasis: { scaleSize: 4 },
+      emphasis: { scaleSize: 5 },
       data: chartData,
     }],
   }), [chartData, holdings.length, palette]);
@@ -101,6 +112,24 @@ export default function CurrencyHoldings({ holdings, darkMode }) {
       chartInstance.current = null;
     };
   }, [holdings.length, option]);
+
+  const highlightSlice = useCallback((currency) => {
+    setActiveCurrency(currency);
+    const entry = indexByCurrency.get(currency);
+    if (entry !== undefined && chartInstance.current) {
+      chartInstance.current.dispatchAction({ type: "highlight", seriesIndex: 0, dataIndex: entry.idx });
+      chartInstance.current.dispatchAction({ type: "showTip", seriesIndex: 0, dataIndex: entry.idx });
+    }
+  }, [indexByCurrency]);
+
+  const clearHighlight = useCallback((currency) => {
+    setActiveCurrency((prev) => (prev === currency ? null : prev));
+    const entry = indexByCurrency.get(currency);
+    if (entry !== undefined && chartInstance.current) {
+      chartInstance.current.dispatchAction({ type: "downplay", seriesIndex: 0, dataIndex: entry.idx });
+      chartInstance.current.dispatchAction({ type: "hideTip" });
+    }
+  }, [indexByCurrency]);
 
   const sortedHoldings = useMemo(() => [...holdings].sort((a, b) => {
     const valA = typeof a[sortBy] === "string" ? a[sortBy].toUpperCase() : a[sortBy];
@@ -133,10 +162,15 @@ export default function CurrencyHoldings({ holdings, darkMode }) {
       <div className={styles.holdingsLayout}>
         <section className={styles.allocationPanel}>
           <div className={styles.subPanelHeader}><h3 className={styles.subPanelTitle}>Exposure map</h3><span className={styles.sectionMeta}>100% total</span></div>
-          <div ref={chartRef} className={styles.chartContainer} />
+          <div ref={chartRef} className={styles.donutContainer} />
           <div className={styles.chartLegend}>
             {chartData.map((item, index) => (
-              <div className={styles.legendItem} key={item.name}>
+              <div
+                className={`${styles.legendItem} ${activeCurrency === item.name ? styles.legendItemActive : ""}`}
+                key={item.name}
+                onMouseEnter={() => highlightSlice(item.name)}
+                onMouseLeave={() => clearHighlight(item.name)}
+              >
                 <span className={styles.legendName}><span className={styles.legendDot} style={{ background: chartColors[index % chartColors.length] }} /><span className={styles.legendText}>{item.name}</span></span>
                 <span className={styles.legendValue}>{item.value.toFixed(2)}%</span>
               </div>
@@ -150,12 +184,31 @@ export default function CurrencyHoldings({ holdings, darkMode }) {
             <table className={styles.customTable}>
               <thead><tr><SortHeader column="currency" sortBy={sortBy} sortOrder={sortOrder} onSort={handleSort}>Currency</SortHeader><SortHeader column="percentage" numeric sortBy={sortBy} sortOrder={sortOrder} onSort={handleSort}>Portfolio weight</SortHeader></tr></thead>
               <tbody>
-                {sortedHoldings.map((holding) => (
-                  <tr key={holding.currency}>
-                    <td className={styles.symbolCell}>{holding.currency}</td>
-                    <td className={`${styles.numeric} ${styles.numberCell}`}><span className={styles.allocationCell}><span className={styles.allocationTrack}><span className={styles.allocationFill} style={{ width: `${Math.min(100, holding.percentage)}%` }} /></span>{holding.percentage.toFixed(2)}%</span></td>
-                  </tr>
-                ))}
+                {sortedHoldings.map((holding) => {
+                  const color = indexByCurrency.get(holding.currency)?.color || chartColors[0];
+                  return (
+                    <tr
+                      key={holding.currency}
+                      onMouseEnter={() => highlightSlice(holding.currency)}
+                      onMouseLeave={() => clearHighlight(holding.currency)}
+                    >
+                      <td className={styles.symbolCell}>
+                        <span className={styles.currencyBadge}>
+                          <span className={styles.currencyDot} style={{ background: color }} aria-hidden="true" />
+                          {holding.currency}
+                        </span>
+                      </td>
+                      <td className={`${styles.numeric} ${styles.numberCell}`}>
+                        <span className={styles.allocationCell}>
+                          <span className={styles.allocationTrack}>
+                            <span className={styles.allocationFill} style={{ width: `${Math.min(100, holding.percentage)}%`, background: color }} />
+                          </span>
+                          {holding.percentage.toFixed(2)}%
+                        </span>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
