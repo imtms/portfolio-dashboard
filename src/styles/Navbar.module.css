@@ -2,11 +2,11 @@
   position: sticky;
   top: 0;
   z-index: 40;
-  height: 64px;
+  height: 56px;
   border-bottom: 1px solid var(--border);
-  background: color-mix(in oklch, var(--surface) 84%, transparent);
-  backdrop-filter: blur(18px) saturate(150%);
-  -webkit-backdrop-filter: blur(18px) saturate(150%);
+  background: color-mix(in srgb, var(--surface) 92%, transparent);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
 }
 
 .topbarInner {
@@ -15,41 +15,50 @@
   margin: 0 auto;
   display: flex;
   align-items: center;
-  gap: 36px;
+  gap: 32px;
 }
 
 .brand {
   display: inline-flex;
   align-items: center;
-  gap: 11px;
+  gap: 10px;
   white-space: nowrap;
   flex-shrink: 0;
 }
 
 .brandMark {
   position: relative;
-  width: 28px;
-  height: 28px;
-  border-radius: var(--radius-md);
+  width: 24px;
+  height: 24px;
+  border-radius: var(--radius-xs);
   border: 1px solid var(--border-strong);
-  background: linear-gradient(145deg, var(--surface-raised), var(--surface-muted));
-  box-shadow: var(--shadow-xs);
-  display: grid;
-  place-items: center;
+  background: var(--surface-muted);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 2px;
+  padding-bottom: 5px;
 }
 
-.brandMark::after {
-  content: "";
-  width: 12px;
-  height: 12px;
-  border: 3.5px solid var(--foreground);
-  border-right-color: var(--accent);
-  border-radius: 50%;
-  transition: transform var(--duration-base) var(--ease-out);
+.brandMark span {
+  display: block;
+  width: 3px;
+  background: var(--foreground);
 }
 
-.brand:hover .brandMark::after {
-  transform: rotate(45deg);
+.brandMark span:nth-child(1) {
+  height: 5px;
+  opacity: 0.45;
+}
+
+.brandMark span:nth-child(2) {
+  height: 9px;
+  opacity: 0.75;
+}
+
+.brandMark span:nth-child(3) {
+  height: 13px;
+  background: var(--accent);
 }
 
 .brandText b,
@@ -58,7 +67,7 @@
 }
 
 .brandText b {
-  font-size: 14px;
+  font-size: 13.5px;
   font-weight: 650;
   letter-spacing: -0.02em;
   line-height: 1.2;
@@ -70,63 +79,57 @@
   font-size: 9px;
   color: var(--subtle-foreground);
   text-transform: uppercase;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.12em;
 }
 
 .productNav {
   height: 100%;
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 22px;
   margin-right: auto;
 }
 
 .productNav a {
   position: relative;
+  height: 100%;
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  height: 34px;
-  padding: 0 12px;
-  border-radius: var(--radius-sm);
   color: var(--muted-foreground);
   font-size: 13px;
-  font-weight: 560;
+  font-weight: 520;
   white-space: nowrap;
-  transition: color var(--duration-fast) var(--ease-out), background-color var(--duration-fast) var(--ease-out);
+  transition: color var(--duration-fast) var(--ease-out);
 }
 
 .productNav a:hover {
   color: var(--foreground);
-  background: var(--surface-muted);
 }
 
 .productNav .activeNav {
   color: var(--foreground);
-  background: var(--surface-muted);
   font-weight: 620;
 }
 
 .productNav .activeNav::after {
   content: "";
   position: absolute;
-  right: 12px;
-  bottom: -15px;
-  left: 12px;
+  right: 0;
+  bottom: -1px;
+  left: 0;
   height: 2px;
-  border-radius: 2px 2px 0 0;
   background: var(--accent);
 }
 
 .externalArrow {
   font-size: 10px;
-  opacity: 0.5;
-  transition: transform var(--duration-fast) var(--ease-out), opacity var(--duration-fast) var(--ease-out);
+  opacity: 0.45;
+  transition: opacity var(--duration-fast) var(--ease-out);
 }
 
 .productNav a:hover .externalArrow {
-  opacity: 0.9;
-  transform: translate(1px, -1px);
+  opacity: 0.85;
 }
 
 .navActions {
@@ -145,38 +148,37 @@
 
 .accountIcon {
   position: absolute;
-  left: 10px;
+  left: 9px;
   z-index: 1;
-  width: 14px;
-  height: 14px;
-  color: var(--muted-foreground);
+  width: 13px;
+  height: 13px;
+  color: var(--subtle-foreground);
   pointer-events: none;
 }
 
 .accountSelect {
-  height: 34px;
-  max-width: 210px;
-  padding: 0 30px 0 31px;
+  height: 32px;
+  max-width: 200px;
+  padding: 0 28px 0 28px;
   border: 1px solid var(--border-strong);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-sm);
   appearance: none;
-  background-color: var(--surface-raised);
+  background-color: var(--surface);
   background-image: linear-gradient(45deg, transparent 50%, var(--muted-foreground) 50%), linear-gradient(135deg, var(--muted-foreground) 50%, transparent 50%);
-  background-position: calc(100% - 14px) 14px, calc(100% - 10px) 14px;
+  background-position: calc(100% - 13px) 13px, calc(100% - 9px) 13px;
   background-repeat: no-repeat;
   background-size: 4px 4px, 4px 4px;
   color: var(--foreground);
-  font-size: 12.5px;
-  font-weight: 540;
+  font-size: 12px;
+  font-weight: 520;
   outline: none;
-  box-shadow: var(--shadow-xs);
   cursor: pointer;
   transition: border-color var(--duration-fast) var(--ease-out), background-color var(--duration-fast) var(--ease-out);
 }
 
 .accountSelect:hover,
 .iconButton:hover {
-  border-color: color-mix(in oklch, var(--accent) 55%, var(--border-strong));
+  border-color: var(--foreground);
   background-color: var(--surface-muted);
 }
 
@@ -184,9 +186,8 @@
 .iconButton:focus-visible,
 .productNav a:focus-visible,
 .brand:focus-visible {
-  outline: 2px solid var(--accent);
+  outline: 1.5px solid var(--accent);
   outline-offset: 2px;
-  border-radius: var(--radius-sm);
 }
 
 .visuallyHidden {
@@ -198,16 +199,12 @@
   white-space: nowrap;
 }
 
-.statusPill {
+.statusText {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  height: 28px;
-  padding: 0 10px;
-  border-radius: 999px;
-  background: var(--surface-muted);
-  border: 1px solid var(--border);
-  color: var(--muted-foreground);
+  padding-right: 4px;
+  color: var(--subtle-foreground);
   font-family: var(--font-mono);
   font-size: 10.5px;
   font-variant-numeric: tabular-nums;
@@ -215,10 +212,10 @@
 }
 
 .statusDot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--positive);
+  width: 5px;
+  height: 5px;
+  border-radius: 1px;
+  background: var(--accent);
   flex-shrink: 0;
 }
 
@@ -229,16 +226,15 @@
 .iconButton {
   display: inline-grid;
   place-items: center;
-  width: 34px;
-  height: 34px;
-  padding: 7px;
+  width: 32px;
+  height: 32px;
+  padding: 6px;
   border: 1px solid var(--border-strong);
-  border-radius: var(--radius-md);
-  background: var(--surface-raised);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
   color: var(--muted-foreground);
-  box-shadow: var(--shadow-xs);
   cursor: pointer;
-  transition: color var(--duration-fast) var(--ease-out), border-color var(--duration-fast) var(--ease-out), background-color var(--duration-fast) var(--ease-out), transform var(--duration-fast) var(--ease-out);
+  transition: color var(--duration-fast) var(--ease-out), border-color var(--duration-fast) var(--ease-out), background-color var(--duration-fast) var(--ease-out);
 }
 
 .iconButton:hover {
@@ -246,11 +242,11 @@
 }
 
 .iconButton svg {
-  width: 16px;
-  height: 16px;
+  width: 15px;
+  height: 15px;
   fill: none;
   stroke: currentColor;
-  stroke-width: 1.75;
+  stroke-width: 1.7;
 }
 
 .refreshButton {
@@ -259,30 +255,27 @@
   align-items: center;
   justify-content: center;
   gap: 6px;
-  padding: 0 12px;
+  padding: 0 11px;
 }
 
 .refreshButton svg {
-  width: 14px;
-  height: 14px;
+  width: 13px;
+  height: 13px;
   flex-shrink: 0;
 }
 
 .refreshLabel {
-  min-width: 58px;
-  font-size: 12px;
-  font-weight: 560;
+  min-width: 56px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 550;
   text-align: left;
   color: var(--foreground);
 }
 
-.iconButton:active:not(:disabled) {
-  transform: translateY(1px);
-}
-
 .refreshButton:disabled {
   cursor: wait;
-  opacity: 0.6;
+  opacity: 0.55;
 }
 
 .refreshing {
@@ -296,7 +289,7 @@
 }
 
 @media (max-width: 1120px) {
-  .statusPill {
+  .statusText {
     display: none;
   }
 
@@ -311,31 +304,27 @@
   }
 
   .topbarInner {
-    min-height: 58px;
+    min-height: 54px;
     height: auto;
     gap: 0 16px;
     flex-wrap: wrap;
   }
 
   .brand {
-    min-height: 58px;
+    min-height: 54px;
   }
 
   .productNav {
     order: 3;
     width: 100%;
-    height: 44px;
-    gap: 4px;
+    height: 40px;
+    gap: 18px;
     border-top: 1px solid var(--border);
     overflow-x: auto;
   }
 
-  .productNav .activeNav::after {
-    bottom: -5px;
-  }
-
   .navActions {
-    min-height: 58px;
+    min-height: 54px;
   }
 
   .refreshLabel {
@@ -343,7 +332,7 @@
   }
 
   .refreshButton {
-    width: 34px;
+    width: 32px;
     padding: 0;
   }
 }
@@ -358,14 +347,13 @@
   }
 
   .accountSelect {
-    width: 124px;
-    padding: 0 26px 0 28px;
-    font-size: 12px;
+    width: 120px;
+    padding: 0 24px 0 26px;
+    font-size: 11.5px;
   }
 
   .productNav a {
     font-size: 12.5px;
-    padding: 0 10px;
   }
 }
 
@@ -384,12 +372,12 @@
   }
 
   .accountSelect {
-    width: 106px;
-    padding: 0 22px 0 10px;
+    width: 104px;
+    padding: 0 20px 0 8px;
   }
 
   .iconButton {
-    width: 32px;
-    height: 32px;
+    width: 30px;
+    height: 30px;
   }
 }

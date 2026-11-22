@@ -2,7 +2,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import * as echarts from "echarts";
 import styles from "../../styles/Dashboard.module.css";
 
-const chartColors = ["#168a61", "#547794", "#9f8c5d", "#7b78a6", "#b56c63", "#6d9470"];
+const LIGHT_TONAL_SCALE = ["#0f766e", "#1e293b", "#149187", "#475569", "#64748b", "#94a3b8"];
+const DARK_TONAL_SCALE = ["#2aa69a", "#cbd5e1", "#1d7a72", "#94a3b8", "#64748b", "#475569"];
 
 function SortIcon({ active, order }) {
   return (
@@ -25,7 +26,7 @@ function SortHeader({ column, children, numeric = false, sortBy, sortOrder, onSo
 function EmptyState() {
   return (
     <div className={styles.emptyState}>
-      <div className={styles.emptyIcon} aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="8" stroke="currentColor" strokeWidth="1.6" /><path d="M15 9.5h-5a2 2 0 0 0 0 4h4a2 2 0 0 1 0 4H9M12 7v2.5M12 17.5V20" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" /></svg></div>
+      <div className={styles.emptyIcon} aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="8" stroke="currentColor" strokeWidth="1.6" /><path d="M15 9.5h-5a2 2 0 0 0 0 4h4a2 2 0 0 1 0 4H9M12 7v2.5M12 17.5V20" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" /></svg></div>
       <p className={styles.emptyTitle}>No currency exposure</p>
       <span className={styles.emptyDescription}>Currency weights will appear when holdings data is available.</span>
     </div>
@@ -38,6 +39,8 @@ export default function CurrencyHoldings({ holdings, darkMode }) {
   const [sortBy, setSortBy] = useState("percentage");
   const [sortOrder, setSortOrder] = useState("desc");
   const [activeCurrency, setActiveCurrency] = useState(null);
+
+  const chartColors = darkMode ? DARK_TONAL_SCALE : LIGHT_TONAL_SCALE;
 
   const palette = useMemo(() => {
     void darkMode;
@@ -58,7 +61,7 @@ export default function CurrencyHoldings({ holdings, darkMode }) {
       value: Number(holding.percentage.toFixed(2)),
       name: holding.currency,
       itemStyle: { color: chartColors[index % chartColors.length] },
-    })), [holdings]);
+    })), [holdings, chartColors]);
 
   const indexByCurrency = useMemo(() => {
     const map = new Map();
@@ -67,13 +70,14 @@ export default function CurrencyHoldings({ holdings, darkMode }) {
   }, [chartData]);
 
   const option = useMemo(() => ({
-    animationDuration: 480,
+    animationDuration: 420,
     tooltip: {
       trigger: "item",
       backgroundColor: palette.tooltip,
       borderColor: palette.border,
       borderWidth: 1,
-      padding: [10, 12],
+      borderRadius: 2,
+      padding: [8, 12],
       textStyle: { color: palette.foreground, fontFamily: "JetBrains Mono, SFMono-Regular, Consolas, monospace", fontSize: 12 },
       formatter: ({ name, value }) => `<strong>${name}</strong><br/><span style="color:${palette.muted}">${Number(value).toFixed(2)}% exposure</span>`,
     },
@@ -82,20 +86,20 @@ export default function CurrencyHoldings({ holdings, darkMode }) {
       subtext: "CURRENCIES",
       left: "center",
       top: "41%",
-      textStyle: { color: palette.foreground, fontFamily: "JetBrains Mono, SFMono-Regular, Consolas, monospace", fontSize: 24, fontWeight: 650 },
+      textStyle: { color: palette.foreground, fontFamily: "JetBrains Mono, SFMono-Regular, Consolas, monospace", fontSize: 22, fontWeight: 600 },
       subtextStyle: { color: palette.muted, fontFamily: "JetBrains Mono, SFMono-Regular, Consolas, monospace", fontSize: 9 },
     },
     series: [{
       name: "Currency allocation",
       type: "pie",
-      radius: ["56%", "77%"],
+      radius: ["58%", "77%"],
       center: ["50%", "50%"],
       minAngle: 2,
-      padAngle: 1.5,
-      itemStyle: { borderRadius: 4, borderColor: palette.surface, borderWidth: 2 },
+      padAngle: 1,
+      itemStyle: { borderRadius: 1, borderColor: palette.surface, borderWidth: 1.5 },
       label: { show: false },
       labelLine: { show: false },
-      emphasis: { scaleSize: 5 },
+      emphasis: { scaleSize: 4 },
       data: chartData,
     }],
   }), [chartData, holdings.length, palette]);
@@ -152,16 +156,17 @@ export default function CurrencyHoldings({ holdings, darkMode }) {
     <div>
       <div className={styles.panelHeader}>
         <div>
-          <span className={styles.panelLabel}>Currency exposure</span>
           <h2 className={styles.panelTitle}>Capital by denomination</h2>
           <p className={styles.panelDescription}>Base-currency value grouped by each instrument&apos;s denomination.</p>
         </div>
-        <div className={styles.panelStat}><span className={styles.panelLabel}>Currencies</span><span className={styles.panelStatValue}>{holdings.length}</span></div>
       </div>
 
       <div className={styles.holdingsLayout}>
         <section className={styles.allocationPanel}>
-          <div className={styles.subPanelHeader}><h3 className={styles.subPanelTitle}>Exposure map</h3><span className={styles.sectionMeta}>100% total</span></div>
+          <div className={styles.subPanelHeader}>
+            <h3 className={styles.subPanelTitle}>Exposure breakdown</h3>
+            <span className={styles.sectionMeta}>100% total</span>
+          </div>
           <div ref={chartRef} className={styles.donutContainer} />
           <div className={styles.chartLegend}>
             {chartData.map((item, index) => (
@@ -179,10 +184,13 @@ export default function CurrencyHoldings({ holdings, darkMode }) {
         </section>
 
         <section className={styles.tablePanel}>
-          <div className={styles.subPanelHeader}><h3 className={styles.subPanelTitle}>Exposure detail</h3><span className={styles.sectionMeta}>Click header to sort</span></div>
+          <div className={styles.subPanelHeader}>
+            <h3 className={styles.subPanelTitle}>Currency ledger</h3>
+            <span className={styles.sectionMeta}>Sortable</span>
+          </div>
           <div className={styles.tableContainer}>
             <table className={styles.customTable}>
-              <thead><tr><SortHeader column="currency" sortBy={sortBy} sortOrder={sortOrder} onSort={handleSort}>Currency</SortHeader><SortHeader column="percentage" numeric sortBy={sortBy} sortOrder={sortOrder} onSort={handleSort}>Portfolio weight</SortHeader></tr></thead>
+              <thead><tr><SortHeader column="currency" sortBy={sortBy} sortOrder={sortOrder} onSort={handleSort}>Currency</SortHeader><SortHeader column="percentage" numeric sortBy={sortBy} sortOrder={sortOrder} onSort={handleSort}>Weight</SortHeader></tr></thead>
               <tbody>
                 {sortedHoldings.map((holding) => {
                   const color = indexByCurrency.get(holding.currency)?.color || chartColors[0];

@@ -47,7 +47,7 @@ function EmptyState() {
   return (
     <div className={styles.emptyState}>
       <div className={styles.emptyIcon} aria-hidden="true">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="m4 16 5-5 4 3 7-8M17 6h3v3" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" /></svg>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="m4 16 5-5 4 3 7-8M17 6h3v3" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" /></svg>
       </div>
       <p className={styles.emptyTitle}>No performance history</p>
       <span className={styles.emptyDescription}>Performance observations will appear after the next sync.</span>
@@ -71,13 +71,12 @@ export default function PerformanceChart({ data, darkMode }) {
   }, [data]);
 
   const stats = useMemo(() => {
-    if (!visibleData.length) return { latest: NaN, delta: NaN, high: NaN, low: NaN };
+    if (!visibleData.length) return { delta: NaN, high: NaN, low: NaN };
     const values = visibleData.map((item) => Number(item.netPerformanceInPercentage)).filter(Number.isFinite);
-    if (!values.length) return { latest: NaN, delta: NaN, high: NaN, low: NaN };
+    if (!values.length) return { delta: NaN, high: NaN, low: NaN };
     const first = values[0];
     const latest = values.at(-1);
     return {
-      latest,
       delta: latest - first,
       high: Math.max(...values),
       low: Math.min(...values),
@@ -99,23 +98,24 @@ export default function PerformanceChart({ data, darkMode }) {
   }, [darkMode]);
 
   const option = useMemo(() => ({
-    animationDuration: 480,
+    animationDuration: 420,
     animationEasing: "cubicOut",
     tooltip: {
       trigger: "axis",
       backgroundColor: palette.tooltip,
       borderColor: palette.border,
       borderWidth: 1,
-      padding: [10, 14],
+      borderRadius: 2,
+      padding: [8, 12],
       textStyle: { color: palette.foreground, fontFamily: "JetBrains Mono, SFMono-Regular, Consolas, monospace", fontSize: 12 },
       formatter: (params) => {
         const point = params[0];
         const value = Number(point.value);
-        return `<span style="color:${palette.muted};font-size:11px">${point.axisValue}</span><br/><strong style="font-size:14px">${value >= 0 ? "+" : ""}${value.toFixed(2)}%</strong>`;
+        return `<span style="color:${palette.muted};font-size:10.5px">${point.axisValue}</span><br/><strong style="font-size:13px">${value >= 0 ? "+" : ""}${value.toFixed(2)}%</strong>`;
       },
-      axisPointer: { type: "line", lineStyle: { color: palette.border, type: "dashed" } },
+      axisPointer: { type: "line", lineStyle: { color: palette.border, type: "solid", width: 1 } },
     },
-    grid: { left: 16, right: 24, top: 26, bottom: 16, containLabel: true },
+    grid: { left: 16, right: 24, top: 24, bottom: 14, containLabel: true },
     xAxis: {
       type: "category",
       boundaryGap: false,
@@ -131,15 +131,15 @@ export default function PerformanceChart({ data, darkMode }) {
       axisLine: { show: false },
       axisTick: { show: false },
       splitNumber: 5,
-      splitLine: { lineStyle: { color: palette.grid, type: "dashed" } },
+      splitLine: { lineStyle: { color: palette.grid, type: "solid" } },
     },
     series: [{
       data: visibleData.map((item) => Number(item.netPerformanceInPercentage.toFixed(2))),
       type: "line",
-      smooth: 0.22,
+      smooth: 0.12,
       showSymbol: false,
-      symbolSize: 7,
-      lineStyle: { color: palette.accent, width: 2.2 },
+      symbolSize: 6,
+      lineStyle: { color: palette.accent, width: 1.8 },
       itemStyle: { color: palette.accent, borderColor: palette.tooltip, borderWidth: 2 },
       emphasis: { focus: "series", scale: true },
       markLine: {
@@ -151,8 +151,8 @@ export default function PerformanceChart({ data, darkMode }) {
       },
       areaStyle: {
         color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-          { offset: 0, color: darkMode ? "rgba(86, 198, 154, 0.24)" : "rgba(22, 138, 97, 0.18)" },
-          { offset: 1, color: darkMode ? "rgba(86, 198, 154, 0.01)" : "rgba(22, 138, 97, 0.005)" },
+          { offset: 0, color: darkMode ? "rgba(42, 166, 154, 0.16)" : "rgba(15, 118, 110, 0.12)" },
+          { offset: 1, color: darkMode ? "rgba(42, 166, 154, 0.00)" : "rgba(15, 118, 110, 0.00)" },
         ]),
       },
     }],
@@ -177,63 +177,49 @@ export default function PerformanceChart({ data, darkMode }) {
     <div>
       <div className={styles.panelHeader}>
         <div>
-          <span className={styles.panelLabel}>Cumulative return</span>
-          <h2 className={styles.panelTitle}>Portfolio performance</h2>
-          <p className={styles.panelDescription}>Net performance across the selected account scope.</p>
+          <h2 className={styles.panelTitle}>Cumulative return</h2>
+          <p className={styles.panelDescription}>Time-weighted net performance across the selected scope.</p>
         </div>
 
-        <div className={styles.panelControls}>
-          <div className={styles.rangeGroup} role="group" aria-label="Chart timeframe">
-            {RANGES.map((item) => {
-              const disabled = Boolean(item.days && spanDays < item.days * 0.6);
-              return (
-                <button
-                  key={item.id}
-                  type="button"
-                  disabled={disabled}
-                  onClick={() => setRange(item.id)}
-                  className={`${styles.rangeButton} ${range === item.id ? styles.rangeButtonActive : ""}`}
-                  aria-pressed={range === item.id}
-                >
-                  {item.label}
-                </button>
-              );
-            })}
-          </div>
-
-          <div className={styles.panelStat}>
-            <span className={styles.panelLabel}>Latest</span>
-            <span className={`${styles.panelStatValue} ${stats.latest >= 0 ? styles.positive : styles.negative}`}>
-              {formatPct(stats.latest)}
-            </span>
-          </div>
+        <div className={styles.rangeGroup} role="group" aria-label="Chart timeframe">
+          {RANGES.map((item) => {
+            const disabled = Boolean(item.days && spanDays < item.days * 0.6);
+            return (
+              <button
+                key={item.id}
+                type="button"
+                disabled={disabled}
+                onClick={() => setRange(item.id)}
+                className={`${styles.rangeButton} ${range === item.id ? styles.rangeButtonActive : ""}`}
+                aria-pressed={range === item.id}
+              >
+                {item.label}
+              </button>
+            );
+          })}
         </div>
       </div>
 
       <div className={styles.chartFrame}>
         <div className={styles.chartStatsBar}>
           <div className={styles.chartStatItem}>
-            <span className={styles.panelLabel}>Range change</span>
-            <span className={`${styles.chartStatValue} ${stats.delta >= 0 ? styles.positive : styles.negative}`}>
-              {formatPct(stats.delta)}
+            <span className={styles.panelLabel}>Window</span>
+            <span className={styles.chartStatValue}>
+              {visibleData[0]?.date} — {visibleData.at(-1)?.date}
             </span>
           </div>
           <div className={styles.chartStatItem}>
             <span className={styles.panelLabel}>Range high</span>
-            <span className={`${styles.chartStatValue} ${stats.high >= 0 ? styles.positive : styles.negative}`}>
-              {formatPct(stats.high)}
-            </span>
+            <span className={styles.chartStatValue}>{formatPct(stats.high)}</span>
           </div>
           <div className={styles.chartStatItem}>
             <span className={styles.panelLabel}>Range low</span>
-            <span className={`${styles.chartStatValue} ${stats.low >= 0 ? styles.positive : styles.negative}`}>
-              {formatPct(stats.low)}
-            </span>
+            <span className={styles.chartStatValue}>{formatPct(stats.low)}</span>
           </div>
           <div className={styles.chartStatItem}>
-            <span className={styles.panelLabel}>Window</span>
-            <span className={styles.chartStatValue}>
-              {visibleData[0]?.date} – {visibleData.at(-1)?.date}
+            <span className={styles.panelLabel}>Range delta</span>
+            <span className={`${styles.chartStatValue} ${stats.delta >= 0 ? styles.positive : styles.negative}`}>
+              {formatPct(stats.delta)}
             </span>
           </div>
         </div>

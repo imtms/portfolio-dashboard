@@ -1,33 +1,45 @@
 :root {
-  --background: oklch(0.978 0.004 165);
-  --surface: oklch(0.996 0.002 165);
-  --surface-raised: oklch(1 0 0);
-  --surface-muted: oklch(0.954 0.007 165);
-  --surface-hover: oklch(0.942 0.009 165);
-  --foreground: oklch(0.18 0.016 165);
-  --muted-foreground: oklch(0.47 0.018 165);
-  --subtle-foreground: oklch(0.60 0.014 165);
-  --border: oklch(0.2 0.016 165 / 9%);
-  --border-strong: oklch(0.2 0.016 165 / 16%);
-  --accent: oklch(0.53 0.135 166);
-  --accent-strong: oklch(0.44 0.14 166);
-  --accent-soft: oklch(0.93 0.04 166);
-  --positive: oklch(0.50 0.14 154);
-  --positive-soft: oklch(0.94 0.04 154);
-  --negative: oklch(0.55 0.18 25);
-  --negative-soft: oklch(0.95 0.04 25);
-  --warning: oklch(0.64 0.14 75);
-  --warning-soft: oklch(0.95 0.045 80);
-  --chart-grid: oklch(0.2 0.015 165 / 8%);
-  --chart-tooltip: oklch(0.998 0.002 165 / 97%);
-  --page-glow: radial-gradient(ellipse 80% 340px at 50% -110px, oklch(0.75 0.08 166 / 13%), transparent 72%);
-  --shadow-xs: 0 1px 2px oklch(0.18 0.02 165 / 4%);
-  --shadow-sm: 0 1px 2px oklch(0.18 0.02 165 / 5%), 0 8px 24px -6px oklch(0.18 0.02 165 / 6%);
-  --shadow-md: 0 4px 14px -2px oklch(0.18 0.02 165 / 7%), 0 16px 36px -10px oklch(0.18 0.02 165 / 8%);
-  --radius-sm: 6px;
-  --radius-md: 8px;
-  --radius-lg: 12px;
-  --radius-xl: 16px;
+  /* Achromatic architectural light surface */
+  --background: #f6f7f8;
+  --surface: #ffffff;
+  --surface-raised: #ffffff;
+  --surface-muted: #f0f2f4;
+  --surface-hover: #e8ecef;
+
+  /* Crisp ink hierarchy */
+  --foreground: #111418;
+  --muted-foreground: #59636e;
+  --subtle-foreground: #848f9b;
+
+  /* Hairline precision borders */
+  --border: rgba(17, 20, 24, 0.09);
+  --border-strong: rgba(17, 20, 24, 0.18);
+
+  /* Single restrained institutional accent */
+  --accent: #0f766e;
+  --accent-strong: #0d5f59;
+  --accent-soft: rgba(15, 118, 110, 0.08);
+
+  /* Semantic financial text tones (restrained, no loud fills) */
+  --positive: #157347;
+  --positive-soft: rgba(21, 115, 71, 0.08);
+  --negative: #b42318;
+  --negative-soft: rgba(180, 35, 24, 0.07);
+  --warning: #a16207;
+
+  /* Chart & elevation */
+  --chart-grid: rgba(17, 20, 24, 0.07);
+  --chart-tooltip: rgba(255, 255, 255, 0.98);
+  --shadow-xs: 0 1px 2px rgba(17, 20, 24, 0.04);
+  --shadow-sm: 0 1px 3px rgba(17, 20, 24, 0.06);
+
+  /* Architectural sharp geometry */
+  --radius-xs: 2px;
+  --radius-sm: 3px;
+  --radius-md: 4px;
+  --radius-lg: 4px;
+
+  /* Spacing scale */
   --space-1: 4px;
   --space-2: 8px;
   --space-3: 12px;
@@ -37,41 +49,52 @@
   --space-8: 32px;
   --space-10: 40px;
   --space-12: 48px;
+
+  /* Typography */
   --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Segoe UI", ui-sans-serif, system-ui, sans-serif;
   --font-serif: "Newsreader", "Iowan Old Style", "Georgia", "Songti SC", "Noto Serif SC", "STSong", serif;
   --font-mono: "JetBrains Mono", "SFMono-Regular", ui-monospace, Menlo, Consolas, "Liberation Mono", monospace;
+
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
-  --duration-fast: 140ms;
-  --duration-base: 220ms;
+  --duration-fast: 120ms;
+  --duration-base: 180ms;
   color-scheme: light;
 }
 
 [data-theme="dark"] {
-  --background: oklch(0.135 0.011 165);
-  --surface: oklch(0.172 0.013 165);
-  --surface-raised: oklch(0.202 0.014 165);
-  --surface-muted: oklch(0.232 0.014 165);
-  --surface-hover: oklch(0.262 0.015 165);
-  --foreground: oklch(0.955 0.006 165);
-  --muted-foreground: oklch(0.71 0.012 165);
-  --subtle-foreground: oklch(0.58 0.012 165);
-  --border: oklch(1 0 0 / 8.5%);
-  --border-strong: oklch(1 0 0 / 16%);
-  --accent: oklch(0.71 0.125 166);
-  --accent-strong: oklch(0.78 0.11 166);
-  --accent-soft: oklch(0.27 0.048 166);
-  --positive: oklch(0.74 0.13 154);
-  --positive-soft: oklch(0.25 0.045 154);
-  --negative: oklch(0.72 0.145 25);
-  --negative-soft: oklch(0.27 0.045 25);
-  --warning: oklch(0.78 0.12 78);
-  --warning-soft: oklch(0.27 0.045 78);
-  --chart-grid: oklch(1 0 0 / 7.5%);
-  --chart-tooltip: oklch(0.195 0.014 165 / 97%);
-  --page-glow: radial-gradient(ellipse 80% 340px at 50% -110px, oklch(0.55 0.11 166 / 14%), transparent 72%);
-  --shadow-xs: 0 1px 2px oklch(0 0 0 / 24%);
-  --shadow-sm: 0 1px 2px oklch(0 0 0 / 26%), 0 10px 26px -6px oklch(0 0 0 / 32%);
-  --shadow-md: 0 6px 18px -2px oklch(0 0 0 / 30%), 0 20px 40px -10px oklch(0 0 0 / 40%);
+  /* Obsidian institutional dark surface */
+  --background: #0b0d10;
+  --surface: #111419;
+  --surface-raised: #151920;
+  --surface-muted: #1a1f28;
+  --surface-hover: #212733;
+
+  /* Crisp dark-mode ink */
+  --foreground: #eef1f5;
+  --muted-foreground: #939da8;
+  --subtle-foreground: #687380;
+
+  /* Hairline precision borders */
+  --border: rgba(255, 255, 255, 0.08);
+  --border-strong: rgba(255, 255, 255, 0.16);
+
+  /* Single restrained accent */
+  --accent: #2aa69a;
+  --accent-strong: #46c2b5;
+  --accent-soft: rgba(42, 166, 154, 0.12);
+
+  /* Semantic financial text tones */
+  --positive: #3fb97d;
+  --positive-soft: rgba(63, 185, 125, 0.1);
+  --negative: #e0645a;
+  --negative-soft: rgba(224, 100, 90, 0.1);
+  --warning: #d49b38;
+
+  /* Chart & elevation */
+  --chart-grid: rgba(255, 255, 255, 0.07);
+  --chart-tooltip: rgba(17, 20, 25, 0.98);
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.35);
+  --shadow-sm: 0 2px 6px rgba(0, 0, 0, 0.4);
   color-scheme: dark;
 }
 
@@ -89,13 +112,11 @@ body {
   min-width: 320px;
   min-height: 100vh;
   background-color: var(--background);
-  background-image: var(--page-glow);
-  background-repeat: no-repeat;
   color: var(--foreground);
   font-family: var(--font-sans);
-  font-size: 15px;
+  font-size: 14.5px;
   line-height: 1.55;
-  letter-spacing: -0.006em;
+  letter-spacing: -0.005em;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
@@ -124,8 +145,8 @@ a {
 }
 
 ::-webkit-scrollbar {
-  width: 10px;
-  height: 10px;
+  width: 8px;
+  height: 8px;
 }
 
 ::-webkit-scrollbar-track {
@@ -134,15 +155,11 @@ a {
 
 ::-webkit-scrollbar-thumb {
   background: var(--border-strong);
-  border: 3px solid transparent;
-  border-radius: 999px;
-  background-clip: padding-box;
+  border-radius: 2px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--muted-foreground);
-  border: 3px solid transparent;
-  background-clip: padding-box;
+  background: var(--subtle-foreground);
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -54,9 +54,8 @@ export default function Home() {
   }, [chart, stockHoldings]);
 
   const tabCounts = {
-    performance: chart.length,
-    stockHoldings: stockHoldings.length,
-    currencyHoldings: currencyHoldings.length,
+    stockHoldings: stockHoldings.length || undefined,
+    currencyHoldings: currencyHoldings.length || undefined,
     research: "21 Nov",
   };
 
@@ -91,63 +90,32 @@ export default function Home() {
 
         <section className={styles.metricsGrid} aria-label="Portfolio summary">
           <div className={styles.metric}>
-            <div className={styles.metricHeader}>
-              <span className={styles.metricLabel}>Net performance</span>
-              {Number.isFinite(summary.currentPerformance) && (
-                <span className={`${styles.trendPill} ${summary.currentPerformance >= 0 ? styles.trendPillPositive : styles.trendPillNegative}`} aria-hidden="true">
-                  {summary.currentPerformance >= 0 ? "↗" : "↘"}
-                </span>
-              )}
-            </div>
-            <div className={styles.metricValueRow}>
-              <span className={`${styles.metricValue} ${summary.currentPerformance >= 0 ? styles.positive : styles.negative}`}>
-                {formatPerformance(summary.currentPerformance)}
-              </span>
-            </div>
+            <span className={styles.metricLabel}>Net performance</span>
+            <span className={`${styles.metricValue} ${summary.currentPerformance >= 0 ? styles.positive : styles.negative}`}>
+              {formatPerformance(summary.currentPerformance)}
+            </span>
             <span className={styles.metricNote}>Latest available close</span>
           </div>
 
           <div className={styles.metric}>
-            <div className={styles.metricHeader}>
-              <span className={styles.metricLabel}>Period movement</span>
-              {Number.isFinite(summary.periodChange) && (
-                <span className={`${styles.trendPill} ${summary.periodChange >= 0 ? styles.trendPillPositive : styles.trendPillNegative}`} aria-hidden="true">
-                  {summary.periodChange >= 0 ? "↗" : "↘"}
-                </span>
-              )}
-            </div>
-            <div className={styles.metricValueRow}>
-              <span className={`${styles.metricValue} ${summary.periodChange >= 0 ? styles.positive : styles.negative}`}>
-                {formatPerformance(summary.periodChange)}
-              </span>
-            </div>
+            <span className={styles.metricLabel}>Period movement</span>
+            <span className={`${styles.metricValue} ${summary.periodChange >= 0 ? styles.positive : styles.negative}`}>
+              {formatPerformance(summary.periodChange)}
+            </span>
             <span className={styles.metricNote}>{chart.length} recorded sessions</span>
           </div>
 
           <div className={styles.metric}>
-            <div className={styles.metricHeader}>
-              <span className={styles.metricLabel}>Largest position</span>
-            </div>
-            <div className={styles.metricValueRow}>
-              <span className={styles.metricValue}>{summary.topHolding?.symbol || "--"}</span>
-            </div>
+            <span className={styles.metricLabel}>Largest position</span>
+            <span className={styles.metricValue}>{summary.topHolding?.symbol || "--"}</span>
             <span className={styles.metricNote}>
-              {summary.topHolding ? `${(summary.topHolding.allocationInPercentage * 100).toFixed(2)}% allocation` : "No holdings available"}
+              {summary.topHolding ? `${(summary.topHolding.allocationInPercentage * 100).toFixed(2)}% weight` : "No holdings available"}
             </span>
-            {summary.topHolding && (
-              <div className={styles.metricBarTrack} aria-hidden="true">
-                <span className={styles.metricBarFill} style={{ width: `${Math.min(100, summary.topHolding.allocationInPercentage * 100)}%` }} />
-              </div>
-            )}
           </div>
 
           <div className={styles.metric}>
-            <div className={styles.metricHeader}>
-              <span className={styles.metricLabel}>Portfolio breadth</span>
-            </div>
-            <div className={styles.metricValueRow}>
-              <span className={styles.metricValue}>{stockHoldings.length || "--"}</span>
-            </div>
+            <span className={styles.metricLabel}>Portfolio breadth</span>
+            <span className={styles.metricValue}>{stockHoldings.length || "--"}</span>
             <span className={styles.metricNote}>{currencyHoldings.length} currency exposures</span>
           </div>
         </section>

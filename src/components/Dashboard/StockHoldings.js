@@ -2,7 +2,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import * as echarts from "echarts";
 import styles from "../../styles/Dashboard.module.css";
 
-const chartColors = ["#168a61", "#3b8c7d", "#5b9ea0", "#9f8c5d", "#7b78a6", "#547794", "#b56c63", "#6d9470"];
+const LIGHT_TONAL_SCALE = ["#0f766e", "#1e293b", "#149187", "#475569", "#5caea7", "#64748b", "#94a3b8", "#cbd5e1"];
+const DARK_TONAL_SCALE = ["#2aa69a", "#cbd5e1", "#1d7a72", "#94a3b8", "#5bc4b8", "#64748b", "#475569", "#334155"];
 const analysisBaseUrl = "https://xh.tms.im";
 
 function getAnalysisUrl(symbol) {
@@ -32,7 +33,7 @@ function SortHeader({ column, children, numeric = false, sortBy, sortOrder, onSo
 function EmptyState() {
   return (
     <div className={styles.emptyState}>
-      <div className={styles.emptyIcon} aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M5 19V9M12 19V5M19 19v-7" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" /></svg></div>
+      <div className={styles.emptyIcon} aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M5 19V9M12 19V5M19 19v-7" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" /></svg></div>
       <p className={styles.emptyTitle}>No asset holdings</p>
       <span className={styles.emptyDescription}>Holdings will appear when the selected account has invested assets.</span>
     </div>
@@ -46,6 +47,8 @@ export default function StockHoldings({ holdings, darkMode }) {
   const [sortOrder, setSortOrder] = useState("desc");
   const [query, setQuery] = useState("");
   const [activeSymbol, setActiveSymbol] = useState(null);
+
+  const chartColors = darkMode ? DARK_TONAL_SCALE : LIGHT_TONAL_SCALE;
 
   const palette = useMemo(() => {
     void darkMode;
@@ -66,7 +69,7 @@ export default function StockHoldings({ holdings, darkMode }) {
       value: Number((holding.allocationInPercentage * 100).toFixed(2)),
       name: holding.symbol,
       itemStyle: { color: chartColors[index % chartColors.length] },
-    })), [holdings]);
+    })), [holdings, chartColors]);
 
   const chartIndexBySymbol = useMemo(() => {
     const map = new Map();
@@ -75,35 +78,36 @@ export default function StockHoldings({ holdings, darkMode }) {
   }, [chartData]);
 
   const option = useMemo(() => ({
-    animationDuration: 480,
+    animationDuration: 420,
     tooltip: {
       trigger: "item",
       backgroundColor: palette.tooltip,
       borderColor: palette.border,
       borderWidth: 1,
-      padding: [10, 12],
+      borderRadius: 2,
+      padding: [8, 12],
       textStyle: { color: palette.foreground, fontFamily: "JetBrains Mono, SFMono-Regular, Consolas, monospace", fontSize: 12 },
-      formatter: ({ name, value }) => `<strong>${name}</strong><br/><span style="color:${palette.muted}">${Number(value).toFixed(2)}% allocation</span>`,
+      formatter: ({ name, value }) => `<strong>${name}</strong><br/><span style="color:${palette.muted}">${Number(value).toFixed(2)}% weight</span>`,
     },
     title: {
       text: `${holdings.length}`,
-      subtext: "ASSETS",
+      subtext: "POSITIONS",
       left: "center",
       top: "41%",
-      textStyle: { color: palette.foreground, fontFamily: "JetBrains Mono, SFMono-Regular, Consolas, monospace", fontSize: 24, fontWeight: 650 },
+      textStyle: { color: palette.foreground, fontFamily: "JetBrains Mono, SFMono-Regular, Consolas, monospace", fontSize: 22, fontWeight: 600 },
       subtextStyle: { color: palette.muted, fontFamily: "JetBrains Mono, SFMono-Regular, Consolas, monospace", fontSize: 9 },
     },
     series: [{
       name: "Stock allocation",
       type: "pie",
-      radius: ["56%", "77%"],
+      radius: ["58%", "77%"],
       center: ["50%", "50%"],
       minAngle: 2,
-      padAngle: 1.5,
-      itemStyle: { borderRadius: 4, borderColor: palette.surface, borderWidth: 2 },
+      padAngle: 1,
+      itemStyle: { borderRadius: 1, borderColor: palette.surface, borderWidth: 1.5 },
       label: { show: false },
       labelLine: { show: false },
-      emphasis: { scaleSize: 5 },
+      emphasis: { scaleSize: 4 },
       data: chartData,
     }],
   }), [chartData, holdings.length, palette]);
@@ -169,21 +173,35 @@ export default function StockHoldings({ holdings, darkMode }) {
     <div>
       <div className={styles.panelHeader}>
         <div>
-          <span className={styles.panelLabel}>Asset exposure</span>
           <h2 className={styles.panelTitle}>Equity allocation</h2>
           <p className={styles.panelDescription}>Relative position sizing and instrument-level performance.</p>
         </div>
-        <div className={styles.panelStat}>
-          <span className={styles.panelLabel}>Positions</span>
-          <span className={styles.panelStatValue}>{holdings.length}</span>
+        <div className={styles.searchWrap}>
+          <svg className={styles.searchIcon} viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <circle cx="11" cy="11" r="7" stroke="currentColor" strokeWidth="1.8" />
+            <path d="m20 20-3.5-3.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+          </svg>
+          <input
+            type="search"
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            placeholder="Filter symbol or name..."
+            aria-label="Filter asset holdings"
+            className={styles.searchInput}
+          />
+          {query && (
+            <button type="button" onClick={() => setQuery("")} className={styles.clearButton} aria-label="Clear filter">
+              ×
+            </button>
+          )}
         </div>
       </div>
 
       <div className={styles.holdingsLayout}>
         <section className={styles.allocationPanel}>
           <div className={styles.subPanelHeader}>
-            <h3 className={styles.subPanelTitle}>Allocation map</h3>
-            <span className={styles.sectionMeta}>100% total</span>
+            <h3 className={styles.subPanelTitle}>Weight breakdown</h3>
+            <span className={styles.sectionMeta}>Top {Math.min(8, chartData.length)}</span>
           </div>
           <div ref={chartRef} className={styles.donutContainer} />
           <div className={styles.chartLegend}>
@@ -202,7 +220,7 @@ export default function StockHoldings({ holdings, darkMode }) {
               </div>
             ))}
             {extraCount > 0 && (
-              <div className={styles.legendMore}>+{extraCount} additional {extraCount === 1 ? "position" : "positions"} in table</div>
+              <div className={styles.legendMore}>+{extraCount} more in ledger</div>
             )}
           </div>
         </section>
@@ -210,27 +228,9 @@ export default function StockHoldings({ holdings, darkMode }) {
         <section className={styles.tablePanel}>
           <div className={styles.subPanelHeader}>
             <h3 className={styles.subPanelTitle}>
-              Position detail {query.trim() ? `(${filteredAndSortedHoldings.length}/${holdings.length})` : ""}
+              Holdings ledger {query.trim() ? `(${filteredAndSortedHoldings.length}/${holdings.length})` : ""}
             </h3>
-            <div className={styles.searchWrap}>
-              <svg className={styles.searchIcon} viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                <circle cx="11" cy="11" r="7" stroke="currentColor" strokeWidth="1.8" />
-                <path d="m20 20-3.5-3.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-              </svg>
-              <input
-                type="search"
-                value={query}
-                onChange={(event) => setQuery(event.target.value)}
-                placeholder="Filter symbol or name..."
-                aria-label="Filter asset holdings"
-                className={styles.searchInput}
-              />
-              {query && (
-                <button type="button" onClick={() => setQuery("")} className={styles.clearButton} aria-label="Clear filter">
-                  ×
-                </button>
-              )}
-            </div>
+            <span className={styles.sectionMeta}>Sortable</span>
           </div>
 
           <div className={styles.tableContainer}>
@@ -241,7 +241,7 @@ export default function StockHoldings({ holdings, darkMode }) {
                     <SortHeader column="symbol" sortBy={sortBy} sortOrder={sortOrder} onSort={handleSort}>Symbol</SortHeader>
                     <SortHeader column="name" sortBy={sortBy} sortOrder={sortOrder} onSort={handleSort}>Instrument</SortHeader>
                     <SortHeader column="netPerformancePercent" numeric sortBy={sortBy} sortOrder={sortOrder} onSort={handleSort}>Return</SortHeader>
-                    <SortHeader column="allocationInPercentage" numeric sortBy={sortBy} sortOrder={sortOrder} onSort={handleSort}>Allocation</SortHeader>
+                    <SortHeader column="allocationInPercentage" numeric sortBy={sortBy} sortOrder={sortOrder} onSort={handleSort}>Weight</SortHeader>
                   </tr>
                 </thead>
                 <tbody>
@@ -264,10 +264,8 @@ export default function StockHoldings({ holdings, darkMode }) {
                         </a>
                       </td>
                       <td className={styles.nameCell} title={holding.name}>{holding.name}</td>
-                      <td className={`${styles.numeric} ${styles.numberCell}`}>
-                        <span className={`${styles.returnPill} ${holding.netPerformancePercent >= 0 ? styles.returnPositive : styles.returnNegative}`}>
-                          {holding.netPerformancePercent >= 0 ? "+" : ""}{(holding.netPerformancePercent * 100).toFixed(2)}%
-                        </span>
+                      <td className={`${styles.numeric} ${styles.numberCell} ${holding.netPerformancePercent >= 0 ? styles.positive : styles.negative}`}>
+                        {holding.netPerformancePercent >= 0 ? "+" : ""}{(holding.netPerformancePercent * 100).toFixed(2)}%
                       </td>
                       <td className={`${styles.numeric} ${styles.numberCell}`}>
                         <span className={styles.allocationCell}>

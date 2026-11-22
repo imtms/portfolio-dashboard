@@ -75,9 +75,11 @@ export default function Articles({ articles }) {
                   </button>
                 )}
               </div>
-              <span className={styles.filterCount}>
-                {isFiltering ? `显示 ${filteredArticles.length} / ${articles.length} 篇` : `共 ${articles.length} 篇研究笔记`}
-              </span>
+              {isFiltering && (
+                <span className={styles.filterCount}>
+                  匹配 {filteredArticles.length} / {articles.length}
+                </span>
+              )}
             </div>
 
             {topTags.length > 0 && (

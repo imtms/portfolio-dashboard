@@ -35,10 +35,14 @@ export default function Navbar({
     <header className={styles.topbar}>
       <div className={styles.topbarInner}>
         <Link href="/" className={styles.brand} aria-label="TMs Portfolio home">
-          <span className={styles.brandMark} aria-hidden="true" />
+          <span className={styles.brandMark} aria-hidden="true">
+            <span />
+            <span />
+            <span />
+          </span>
           <span className={styles.brandText}>
             <b>TMs Portfolio</b>
-            <small>Private wealth console</small>
+            <small>Wealth console</small>
           </span>
         </Link>
 
@@ -80,7 +84,7 @@ export default function Navbar({
           {onRefresh && (
             <>
               {updatedAt && (
-                <span className={styles.statusPill}>
+                <span className={styles.statusText}>
                   <span className={`${styles.statusDot} ${isStale ? styles.statusDotStale : ""}`} aria-hidden="true" />
                   <time dateTime={updatedAt} title={`Last successful refresh: ${new Date(updatedAt).toLocaleString()}`}>
                     {isStale ? "Cached" : "Updated"} {new Date(updatedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: false })}
@@ -100,7 +104,7 @@ export default function Navbar({
                   <path d="M20 7v5h-5M4 17v-5h5" strokeLinecap="round" strokeLinejoin="round" />
                   <path d="M6.1 7a7 7 0 0 1 11.6-1L20 9M4 15l2.3 3A7 7 0 0 0 17.9 17" strokeLinecap="round" />
                 </svg>
-                <span className={styles.refreshLabel}>{isRefreshing ? "Refreshing" : "Refresh"}</span>
+                <span className={styles.refreshLabel}>{isRefreshing ? "Syncing" : "Refresh"}</span>
               </button>
             </>
           )}
