@@ -2,8 +2,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import * as echarts from "echarts";
 import styles from "../../styles/Dashboard.module.css";
 
-const LIGHT_TONAL_SCALE = ["#0f766e", "#1e293b", "#149187", "#475569", "#64748b", "#94a3b8"];
-const DARK_TONAL_SCALE = ["#2aa69a", "#cbd5e1", "#1d7a72", "#94a3b8", "#64748b", "#475569"];
+const LIGHT_CHART_PALETTE = ["#2563eb", "#0d9488", "#d97706", "#7c3aed", "#e11d48", "#0284c7"];
+const DARK_CHART_PALETTE = ["#3b82f6", "#14b8a6", "#f59e0b", "#8b5cf6", "#f43f5e", "#38bdf8"];
 
 function SortIcon({ active, order }) {
   return (
@@ -40,7 +40,7 @@ export default function CurrencyHoldings({ holdings, darkMode }) {
   const [sortOrder, setSortOrder] = useState("desc");
   const [activeCurrency, setActiveCurrency] = useState(null);
 
-  const chartColors = darkMode ? DARK_TONAL_SCALE : LIGHT_TONAL_SCALE;
+  const chartColors = darkMode ? DARK_CHART_PALETTE : LIGHT_CHART_PALETTE;
 
   const palette = useMemo(() => {
     void darkMode;

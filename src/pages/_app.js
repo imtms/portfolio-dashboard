@@ -7,7 +7,7 @@ export default function MyApp({ Component, pageProps }) {
     <>
       <Head>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <meta name="theme-color" content="#f6f7f8" />
+        <meta name="theme-color" content="#f8fafc" />
       </Head>
       <Component {...pageProps} />
       <Analytics />

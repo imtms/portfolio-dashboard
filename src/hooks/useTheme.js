@@ -35,7 +35,7 @@ export function useTheme() {
     document.documentElement.dataset.theme = darkMode ? "dark" : "light";
     const metaTheme = document.querySelector('meta[name="theme-color"]');
     if (metaTheme) {
-      metaTheme.setAttribute("content", darkMode ? "#0b0d10" : "#f6f7f8");
+      metaTheme.setAttribute("content", darkMode ? "#090d16" : "#f8fafc");
     }
   }, [darkMode]);
 

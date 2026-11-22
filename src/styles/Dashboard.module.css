@@ -1,7 +1,7 @@
 .page {
   width: min(100% - 48px, 1320px);
   margin: 0 auto;
-  padding: var(--space-6) 0 var(--space-12);
+  padding: var(--space-5) 0 var(--space-12);
 }
 
 .dataError {
@@ -22,54 +22,9 @@
   font-family: var(--font-mono);
   font-size: 10px;
   font-weight: 600;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.07em;
   line-height: 1.4;
   text-transform: uppercase;
-}
-
-/* Unified architectural KPI strip */
-.metricsGrid {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  margin-bottom: var(--space-5);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  background: var(--surface);
-  overflow: hidden;
-}
-
-.metric {
-  min-width: 0;
-  padding: var(--space-5) var(--space-6);
-  border-right: 1px solid var(--border);
-}
-
-.metric:last-child {
-  border-right: 0;
-}
-
-.metricValue {
-  display: block;
-  margin-top: var(--space-2);
-  overflow: hidden;
-  font-family: var(--font-mono);
-  font-size: 24px;
-  font-weight: 600;
-  letter-spacing: -0.025em;
-  line-height: 1.2;
-  font-variant-numeric: tabular-nums;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.metricNote {
-  display: block;
-  margin-top: var(--space-1);
-  color: var(--muted-foreground);
-  font-size: 12px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 /* Main console frame */
@@ -78,6 +33,65 @@
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
   background: var(--surface);
+  box-shadow: var(--shadow-sm);
+}
+
+/* Compact inline summary strip integrated at top of console */
+.summaryStrip {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.summaryItem {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+  min-width: 0;
+  padding: 11px var(--space-5);
+  border-right: 1px solid var(--border);
+}
+
+.summaryItem:last-child {
+  border-right: 0;
+}
+
+.summaryLabel {
+  color: var(--subtle-foreground);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.summaryValueGroup {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  min-width: 0;
+}
+
+.summaryValue {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  font-weight: 650;
+  letter-spacing: -0.015em;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.summarySub {
+  color: var(--muted-foreground);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .tabsBar {
@@ -85,16 +99,16 @@
   align-items: center;
   justify-content: space-between;
   gap: var(--space-4);
-  min-height: 48px;
+  min-height: 46px;
   padding: 0 var(--space-5);
   border-bottom: 1px solid var(--border);
-  background: var(--surface-muted);
+  background: var(--surface);
 }
 
 .navTabs {
   display: flex;
   align-self: stretch;
-  gap: var(--space-4);
+  gap: var(--space-5);
 }
 
 .tabButton {
@@ -108,7 +122,7 @@
   background: transparent;
   color: var(--muted-foreground);
   font-size: 13px;
-  font-weight: 520;
+  font-weight: 540;
   white-space: nowrap;
   cursor: pointer;
   transition: color var(--duration-fast) var(--ease-out);
@@ -147,7 +161,7 @@
   width: 14px;
   height: 14px;
   flex: 0 0 14px;
-  opacity: 0.7;
+  opacity: 0.72;
 }
 
 .tabButtonActive .tabIcon {
@@ -163,7 +177,7 @@
 }
 
 .tabButtonActive .tabCount {
-  color: var(--muted-foreground);
+  color: var(--accent);
 }
 
 .contentArea {
@@ -183,9 +197,10 @@
 .panelTitle {
   margin: 0;
   font-size: 16px;
-  font-weight: 620;
+  font-weight: 650;
   letter-spacing: -0.015em;
   line-height: 1.3;
+  color: var(--foreground);
 }
 
 .panelDescription {
@@ -199,7 +214,7 @@
   align-items: center;
   border: 1px solid var(--border-strong);
   border-radius: var(--radius-sm);
-  background: var(--surface-muted);
+  background: var(--surface);
   overflow: hidden;
 }
 
@@ -223,7 +238,7 @@
 
 .rangeButton:hover:not(:disabled) {
   color: var(--foreground);
-  background: var(--surface-hover);
+  background: var(--surface-muted);
 }
 
 .rangeButton:disabled {
@@ -232,12 +247,17 @@
 }
 
 .rangeButtonActive {
-  background: var(--surface);
-  color: var(--foreground);
-  font-weight: 650;
+  background: var(--accent);
+  color: #ffffff;
+  font-weight: 620;
 }
 
-/* Telemetry strip inside chart frame */
+.rangeButtonActive:hover:not(:disabled) {
+  background: var(--accent-strong);
+  color: #ffffff;
+}
+
+/* Chart frame & telemetry strip */
 .chartFrame {
   position: relative;
   min-width: 0;
@@ -251,7 +271,7 @@
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   border-bottom: 1px solid var(--border);
-  background: var(--surface-muted);
+  background: var(--surface);
 }
 
 .chartStatItem {
@@ -278,7 +298,7 @@
 
 .chartContainer {
   width: 100%;
-  height: 390px;
+  height: 410px;
 }
 
 .donutContainer {
@@ -308,20 +328,20 @@
   align-items: center;
   justify-content: space-between;
   gap: var(--space-3);
-  min-height: 44px;
+  min-height: 42px;
   padding: 0 var(--space-4);
   border-bottom: 1px solid var(--border);
-  background: var(--surface-muted);
+  background: var(--surface);
 }
 
 .subPanelTitle {
   margin: 0;
   font-family: var(--font-mono);
   font-size: 10.5px;
-  font-weight: 600;
+  font-weight: 650;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--muted-foreground);
+  color: var(--foreground);
 }
 
 .searchWrap {
@@ -343,8 +363,8 @@
 
 .searchInput {
   width: 100%;
-  height: 28px;
-  padding: 0 26px 0 27px;
+  height: 30px;
+  padding: 0 26px 0 28px;
   border: 1px solid var(--border-strong);
   border-radius: var(--radius-xs);
   background: var(--surface);
@@ -388,7 +408,7 @@
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 2px var(--space-3);
-  padding: var(--space-2) var(--space-4) var(--space-4);
+  padding: var(--space-3) var(--space-4) var(--space-4);
   border-top: 1px solid var(--border);
 }
 
@@ -424,9 +444,9 @@
 }
 
 .legendDot {
-  width: 7px;
-  height: 7px;
-  flex: 0 0 7px;
+  width: 8px;
+  height: 8px;
+  flex: 0 0 8px;
   border-radius: 1px;
 }
 
@@ -436,7 +456,7 @@
   white-space: nowrap;
   font-family: var(--font-mono);
   font-size: 11.5px;
-  font-weight: 550;
+  font-weight: 560;
 }
 
 .legendValue {
@@ -472,7 +492,7 @@
   padding: 0 var(--space-4);
   border-bottom: 1px solid var(--border);
   background: var(--surface-muted);
-  color: var(--subtle-foreground);
+  color: var(--muted-foreground);
   font-family: var(--font-mono);
   font-size: 10px;
   font-weight: 600;
@@ -528,12 +548,12 @@
 .sortIcon {
   width: 11px;
   height: 11px;
-  opacity: 0.5;
+  opacity: 0.55;
 }
 
 .symbolCell {
   font-family: var(--font-mono);
-  font-weight: 600;
+  font-weight: 620;
   white-space: nowrap;
 }
 
@@ -541,9 +561,9 @@
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  color: var(--foreground);
+  color: var(--accent-strong);
   text-decoration: underline;
-  text-decoration-color: var(--border-strong);
+  text-decoration-color: transparent;
   text-underline-offset: 3px;
   transition: color var(--duration-fast) var(--ease-out), text-decoration-color var(--duration-fast) var(--ease-out);
 }
@@ -555,12 +575,12 @@
 
 .symbolArrow {
   font-size: 10px;
-  color: var(--subtle-foreground);
-  transition: color var(--duration-fast) var(--ease-out);
+  opacity: 0.5;
+  transition: opacity var(--duration-fast) var(--ease-out);
 }
 
 .symbolLink:hover .symbolArrow {
-  color: var(--accent);
+  opacity: 1;
 }
 
 .symbolLink:focus-visible {
@@ -575,8 +595,8 @@
 }
 
 .currencyDot {
-  width: 7px;
-  height: 7px;
+  width: 8px;
+  height: 8px;
   border-radius: 1px;
   flex-shrink: 0;
 }
@@ -612,7 +632,7 @@
 
 .allocationTrack {
   width: 64px;
-  height: 3px;
+  height: 4px;
   overflow: hidden;
   border-radius: 1px;
   background: var(--surface-muted);
@@ -727,7 +747,7 @@
   padding: var(--space-4);
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
-  background: var(--surface-muted);
+  background: var(--surface);
   max-height: calc(100vh - 104px);
   overflow-y: auto;
 }
@@ -990,15 +1010,15 @@
 }
 
 @media (max-width: 960px) {
-  .metricsGrid {
+  .summaryStrip {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .metric:nth-child(2) {
+  .summaryItem:nth-child(2) {
     border-right: 0;
   }
 
-  .metric:nth-child(-n + 2) {
+  .summaryItem:nth-child(-n + 2) {
     border-bottom: 1px solid var(--border);
   }
 
@@ -1010,15 +1030,18 @@
 @media (max-width: 680px) {
   .page {
     width: min(100% - 32px, 1320px);
-    padding-top: var(--space-5);
+    padding-top: var(--space-4);
   }
 
-  .metric {
-    padding: var(--space-4);
+  .summaryItem {
+    padding: 9px var(--space-3);
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
   }
 
-  .metricValue {
-    font-size: 19px;
+  .summaryValue {
+    font-size: 13.5px;
   }
 
   .tabsBar {
@@ -1034,7 +1057,7 @@
 
   .navTabs {
     min-width: max-content;
-    height: 46px;
+    height: 44px;
     padding: 0 var(--space-4);
   }
 
@@ -1111,16 +1134,8 @@
     width: min(100% - 24px, 1320px);
   }
 
-  .metric {
-    padding: var(--space-3);
-  }
-
-  .metricValue {
-    font-size: 17px;
-  }
-
-  .tabCount,
-  .metricNote {
+  .summarySub,
+  .tabCount {
     display: none;
   }
 

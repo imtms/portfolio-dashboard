@@ -151,8 +151,8 @@ export default function PerformanceChart({ data, darkMode }) {
       },
       areaStyle: {
         color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-          { offset: 0, color: darkMode ? "rgba(42, 166, 154, 0.16)" : "rgba(15, 118, 110, 0.12)" },
-          { offset: 1, color: darkMode ? "rgba(42, 166, 154, 0.00)" : "rgba(15, 118, 110, 0.00)" },
+          { offset: 0, color: darkMode ? "rgba(59, 130, 246, 0.22)" : "rgba(29, 78, 216, 0.14)" },
+          { offset: 1, color: darkMode ? "rgba(59, 130, 246, 0.00)" : "rgba(29, 78, 216, 0.00)" },
         ]),
       },
     }],

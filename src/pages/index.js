@@ -88,39 +88,44 @@ export default function Home() {
       <main className={styles.page}>
         {error && <p className={styles.dataError} role="alert">{error}{updatedAt && " Showing the last loaded data."}</p>}
 
-        <section className={styles.metricsGrid} aria-label="Portfolio summary">
-          <div className={styles.metric}>
-            <span className={styles.metricLabel}>Net performance</span>
-            <span className={`${styles.metricValue} ${summary.currentPerformance >= 0 ? styles.positive : styles.negative}`}>
-              {formatPerformance(summary.currentPerformance)}
-            </span>
-            <span className={styles.metricNote}>Latest available close</span>
-          </div>
-
-          <div className={styles.metric}>
-            <span className={styles.metricLabel}>Period movement</span>
-            <span className={`${styles.metricValue} ${summary.periodChange >= 0 ? styles.positive : styles.negative}`}>
-              {formatPerformance(summary.periodChange)}
-            </span>
-            <span className={styles.metricNote}>{chart.length} recorded sessions</span>
-          </div>
-
-          <div className={styles.metric}>
-            <span className={styles.metricLabel}>Largest position</span>
-            <span className={styles.metricValue}>{summary.topHolding?.symbol || "--"}</span>
-            <span className={styles.metricNote}>
-              {summary.topHolding ? `${(summary.topHolding.allocationInPercentage * 100).toFixed(2)}% weight` : "No holdings available"}
-            </span>
-          </div>
-
-          <div className={styles.metric}>
-            <span className={styles.metricLabel}>Portfolio breadth</span>
-            <span className={styles.metricValue}>{stockHoldings.length || "--"}</span>
-            <span className={styles.metricNote}>{currencyHoldings.length} currency exposures</span>
-          </div>
-        </section>
-
         <section className={styles.dashboardShell}>
+          <div className={styles.summaryStrip} aria-label="Portfolio summary">
+            <div className={styles.summaryItem}>
+              <span className={styles.summaryLabel}>Net</span>
+              <span className={`${styles.summaryValue} ${summary.currentPerformance >= 0 ? styles.positive : styles.negative}`}>
+                {formatPerformance(summary.currentPerformance)}
+              </span>
+            </div>
+
+            <div className={styles.summaryItem}>
+              <span className={styles.summaryLabel}>Period</span>
+              <span className={styles.summaryValueGroup}>
+                <span className={`${styles.summaryValue} ${summary.periodChange >= 0 ? styles.positive : styles.negative}`}>
+                  {formatPerformance(summary.periodChange)}
+                </span>
+                {chart.length > 0 && <span className={styles.summarySub}>{chart.length}d</span>}
+              </span>
+            </div>
+
+            <div className={styles.summaryItem}>
+              <span className={styles.summaryLabel}>Top</span>
+              <span className={styles.summaryValueGroup}>
+                <span className={styles.summaryValue}>{summary.topHolding?.symbol || "--"}</span>
+                {summary.topHolding && (
+                  <span className={styles.summarySub}>{(summary.topHolding.allocationInPercentage * 100).toFixed(1)}%</span>
+                )}
+              </span>
+            </div>
+
+            <div className={styles.summaryItem}>
+              <span className={styles.summaryLabel}>Scope</span>
+              <span className={styles.summaryValueGroup}>
+                <span className={styles.summaryValue}>{stockHoldings.length || "--"}</span>
+                <span className={styles.summarySub}>assets · {currencyHoldings.length} FX</span>
+              </span>
+            </div>
+          </div>
+
           <div className={styles.tabsBar}>
             <div className={styles.navTabs} role="tablist" aria-label="Portfolio views">
               {tabs.map((tab) => (
@@ -140,6 +145,7 @@ export default function Home() {
             </div>
             <span className={styles.sectionMeta}>Base currency normalized</span>
           </div>
+
           <div className={styles.contentArea} role="tabpanel">{renderContent()}</div>
         </section>
       </main>
