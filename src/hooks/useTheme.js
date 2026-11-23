@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useSyncExternalStore } from "react";
 
 const STORAGE_KEY = "portfolio-theme";
-const LIGHT_THEME_COLOR = "#f1f5f9";
-const DARK_THEME_COLOR = "#080c14";
+const LIGHT_THEME_COLOR = "#eef2f6";
+const DARK_THEME_COLOR = "#070b12";
 
 const listeners = new Set();
 

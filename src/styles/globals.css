@@ -1,47 +1,51 @@
 :root {
-  /* Layered slate-paper light foundation (clear elevation ramp) */
-  --background: #f1f5f9;
+  /* Layered mineral-alabaster light foundation (4-tier elevation ramp) */
+  --background: #eef2f6;
   --surface: #ffffff;
-  --surface-subtle: #f8fafc;
+  --surface-subtle: #f7f9fc;
   --surface-raised: #ffffff;
-  --surface-muted: #edf2f7;
-  --surface-hover: #e2e8f0;
+  --surface-muted: #edf1f7;
+  --surface-hover: #e3e9f2;
 
   /* Deep navy-ink hierarchy with WCAG AA legibility even at 10px mono */
-  --foreground: #0f172a;
-  --muted-foreground: #475569;
-  --subtle-foreground: #55647a;
+  --foreground: #0c1322;
+  --muted-foreground: #445168;
+  --subtle-foreground: #5a6880;
 
   /* Crisp architectural borders */
-  --border: rgba(15, 23, 42, 0.09);
-  --border-strong: rgba(15, 23, 42, 0.16);
+  --border: rgba(12, 19, 34, 0.085);
+  --border-strong: rgba(12, 19, 34, 0.16);
 
   /* Primary institutional accent: Deep Cobalt Blue */
   --accent: #1d4ed8;
-  --accent-strong: #1e40af;
+  --accent-strong: #173eb0;
+  --accent-solid: #1d4ed8;
+  --accent-solid-hover: #173eb0;
   --accent-soft: rgba(29, 78, 216, 0.08);
-  --accent-border: rgba(29, 78, 216, 0.24);
+  --accent-border: rgba(29, 78, 216, 0.26);
 
   /* Semantic financial colors */
   --positive: #047857;
   --positive-soft: rgba(4, 120, 87, 0.09);
-  --positive-border: rgba(4, 120, 87, 0.22);
+  --positive-border: rgba(4, 120, 87, 0.24);
   --negative: #be123c;
   --negative-soft: rgba(190, 18, 60, 0.08);
-  --negative-border: rgba(190, 18, 60, 0.22);
+  --negative-border: rgba(190, 18, 60, 0.24);
   --warning: #d97706;
+  --warning-soft: rgba(217, 119, 6, 0.14);
 
   /* Chart & elevation */
-  --chart-grid: rgba(15, 23, 42, 0.07);
+  --chart-grid: rgba(12, 19, 34, 0.065);
   --chart-tooltip: rgba(255, 255, 255, 0.98);
-  --shadow-xs: 0 1px 2px rgba(15, 23, 42, 0.04);
-  --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.06), 0 6px 16px rgba(15, 23, 42, 0.04);
+  --shadow-xs: 0 1px 2px rgba(12, 19, 34, 0.045);
+  --shadow-card: 0 1px 2px rgba(12, 19, 34, 0.04), 0 2px 6px rgba(12, 19, 34, 0.025);
+  --shadow-sm: 0 1px 3px rgba(12, 19, 34, 0.06), 0 8px 24px rgba(12, 19, 34, 0.045);
 
   /* Architectural geometry */
-  --radius-xs: 2px;
-  --radius-sm: 4px;
-  --radius-md: 6px;
-  --radius-lg: 6px;
+  --radius-xs: 3px;
+  --radius-sm: 5px;
+  --radius-md: 8px;
+  --radius-lg: 8px;
 
   /* Layout metrics */
   --navbar-height: 56px;
@@ -69,28 +73,30 @@
 }
 
 [data-theme="dark"] {
-  /* Deep midnight navy-obsidian foundation */
-  --background: #080c14;
-  --surface: #0f1624;
-  --surface-subtle: #121b2b;
-  --surface-raised: #141e30;
-  --surface-muted: #1a2538;
-  --surface-hover: #223049;
+  /* Deep midnight navy-obsidian foundation (true recessed-subtle & raised-card ramp) */
+  --background: #070b12;
+  --surface: #0e1523;
+  --surface-subtle: #0a101b;
+  --surface-raised: #131c2e;
+  --surface-muted: #182338;
+  --surface-hover: #21304b;
 
-  /* High-contrast ink (subtle-foreground >= 5.3:1 on surface) */
-  --foreground: #f8fafc;
+  /* High-contrast ink (subtle-foreground >= 5.5:1 on surface) */
+  --foreground: #f4f7fb;
   --muted-foreground: #9fb0c7;
-  --subtle-foreground: #8596ae;
+  --subtle-foreground: #8496af;
 
   /* Crisp borders */
-  --border: rgba(148, 163, 184, 0.14);
-  --border-strong: rgba(148, 163, 184, 0.26);
+  --border: rgba(148, 163, 184, 0.13);
+  --border-strong: rgba(148, 163, 184, 0.24);
 
-  /* Primary institutional accent */
-  --accent: #3b82f6;
-  --accent-strong: #60a5fa;
-  --accent-soft: rgba(59, 130, 246, 0.15);
-  --accent-border: rgba(96, 165, 250, 0.32);
+  /* Primary institutional accent (WCAG AA solid fill + luminous stroke/text) */
+  --accent: #4f94ff;
+  --accent-strong: #7bb0ff;
+  --accent-solid: #2563eb;
+  --accent-solid-hover: #1d4ed8;
+  --accent-soft: rgba(79, 148, 255, 0.14);
+  --accent-border: rgba(123, 176, 255, 0.34);
 
   /* Semantic financial colors */
   --positive: #34d399;
@@ -100,12 +106,14 @@
   --negative-soft: rgba(251, 113, 133, 0.12);
   --negative-border: rgba(251, 113, 133, 0.28);
   --warning: #f59e0b;
+  --warning-soft: rgba(245, 158, 11, 0.18);
 
   /* Chart & elevation */
-  --chart-grid: rgba(148, 163, 184, 0.10);
-  --chart-tooltip: rgba(15, 22, 36, 0.98);
+  --chart-grid: rgba(148, 163, 184, 0.09);
+  --chart-tooltip: rgba(13, 20, 34, 0.98);
   --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.35);
-  --shadow-sm: 0 2px 10px rgba(0, 0, 0, 0.45);
+  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.38), inset 0 1px 0 rgba(255, 255, 255, 0.03);
+  --shadow-sm: 0 4px 18px rgba(0, 0, 0, 0.52), inset 0 1px 0 rgba(255, 255, 255, 0.035);
   color-scheme: dark;
 }
 

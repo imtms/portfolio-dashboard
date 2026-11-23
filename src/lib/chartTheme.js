@@ -1,52 +1,59 @@
 // Deterministic institutional color tokens for ECharts.
-// Avoids raw gain-green and loss-red inside categorical slices so semantic P&L stays unambiguous.
+// Perceptually hue-spaced categorical palette that avoids raw gain-green and loss-red
+// so semantic P&L stays unambiguous and adjacent donut slices remain clearly distinct.
 
 const LIGHT_THEME = {
   accent: "#1d4ed8",
-  areaTop: "rgba(29, 78, 216, 0.15)",
+  areaTop: "rgba(29, 78, 216, 0.16)",
+  areaMid: "rgba(29, 78, 216, 0.05)",
   areaBottom: "rgba(29, 78, 216, 0.00)",
-  foreground: "#0f172a",
-  muted: "#475569",
-  subtle: "#55647a",
-  grid: "rgba(15, 23, 42, 0.07)",
+  pointer: "rgba(29, 78, 216, 0.34)",
+  foreground: "#0c1322",
+  muted: "#445168",
+  subtle: "#5a6880",
+  grid: "rgba(12, 19, 34, 0.065)",
   tooltip: "rgba(255, 255, 255, 0.98)",
-  border: "rgba(15, 23, 42, 0.16)",
+  border: "rgba(12, 19, 34, 0.15)",
+  shadow: "rgba(12, 19, 34, 0.10)",
   surface: "#ffffff",
   positive: "#047857",
   negative: "#be123c",
   series: [
-    "#1d4ed8", // Deep Cobalt (primary accent)
-    "#0e7490", // Deep Cyan-Slate
-    "#b45309", // Warm Bronze-Amber
-    "#4338ca", // Institutional Indigo
-    "#6d28d9", // Muted Plum
-    "#0369a1", // Steel Ocean
-    "#9a3412", // Muted Terracotta
+    "#1d4ed8", // Institutional Cobalt
+    "#c97a16", // Warm Ochre-Gold
+    "#0f766e", // Deep Teal-Slate
+    "#6d28d9", // Royal Violet
+    "#0284c7", // Cerulean Steel
+    "#b84a1e", // Burnt Sienna
+    "#4338ca", // Slate Indigo
   ],
   other: "#94a3b8",
 };
 
 const DARK_THEME = {
-  accent: "#3b82f6",
-  areaTop: "rgba(59, 130, 246, 0.24)",
-  areaBottom: "rgba(59, 130, 246, 0.00)",
-  foreground: "#f8fafc",
+  accent: "#4f94ff",
+  areaTop: "rgba(79, 148, 255, 0.24)",
+  areaMid: "rgba(79, 148, 255, 0.07)",
+  areaBottom: "rgba(79, 148, 255, 0.00)",
+  pointer: "rgba(123, 176, 255, 0.42)",
+  foreground: "#f4f7fb",
   muted: "#9fb0c7",
-  subtle: "#8596ae",
-  grid: "rgba(148, 163, 184, 0.10)",
-  tooltip: "rgba(15, 22, 36, 0.98)",
-  border: "rgba(148, 163, 184, 0.26)",
-  surface: "#141e30",
+  subtle: "#8496af",
+  grid: "rgba(148, 163, 184, 0.09)",
+  tooltip: "rgba(13, 20, 34, 0.98)",
+  border: "rgba(148, 163, 184, 0.24)",
+  shadow: "rgba(0, 0, 0, 0.48)",
+  surface: "#131c2e",
   positive: "#34d399",
   negative: "#fb7185",
   series: [
-    "#3b82f6", // Crisp Cobalt (primary accent)
-    "#22d3ee", // Cool Steel Cyan
-    "#f59e0b", // Warm Amber
-    "#818cf8", // Soft Indigo
-    "#a78bfa", // Muted Lavender
-    "#38bdf8", // Sky Steel
-    "#fb923c", // Muted Copper
+    "#4f94ff", // Luminous Cobalt
+    "#eab308", // Warm Gold
+    "#2dd4bf", // Cool Teal
+    "#a78bfa", // Soft Violet
+    "#38bdf8", // Clear Sky
+    "#fb923c", // Warm Copper
+    "#818cf8", // Periwinkle Indigo
   ],
   other: "#475569",
 };

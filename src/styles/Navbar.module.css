@@ -4,9 +4,10 @@
   z-index: 40;
   height: var(--navbar-height);
   border-bottom: 1px solid var(--border);
-  background: color-mix(in srgb, var(--surface) 90%, transparent);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  background: color-mix(in srgb, var(--surface) 88%, transparent);
+  box-shadow: var(--shadow-xs);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
 }
 
 .topbarInner {
@@ -28,36 +29,43 @@
 
 .brandMark {
   position: relative;
-  width: 24px;
-  height: 24px;
-  border-radius: var(--radius-xs);
+  width: 26px;
+  height: 26px;
+  border-radius: var(--radius-sm);
   border: 1px solid var(--border-strong);
-  background: var(--surface-muted);
+  background: linear-gradient(180deg, var(--surface) 0%, var(--surface-muted) 100%);
+  box-shadow: var(--shadow-xs);
   display: flex;
   align-items: flex-end;
   justify-content: center;
-  gap: 2px;
+  gap: 2.5px;
   padding-bottom: 5px;
+  transition: border-color var(--duration-fast) var(--ease-out);
+}
+
+.brand:hover .brandMark {
+  border-color: var(--accent-border);
 }
 
 .brandMark span {
   display: block;
   width: 3px;
+  border-radius: 1px 1px 0 0;
   background: var(--foreground);
 }
 
 .brandMark span:nth-child(1) {
   height: 5px;
-  opacity: 0.45;
+  opacity: 0.38;
 }
 
 .brandMark span:nth-child(2) {
   height: 9px;
-  opacity: 0.75;
+  opacity: 0.7;
 }
 
 .brandMark span:nth-child(3) {
-  height: 13px;
+  height: 14px;
   background: var(--accent);
 }
 
@@ -119,6 +127,7 @@
   bottom: -1px;
   left: 0;
   height: 2px;
+  border-radius: 2px 2px 0 0;
   background: var(--accent);
 }
 
@@ -178,8 +187,9 @@
 
 .accountSelect:hover,
 .iconButton:hover {
-  border-color: var(--foreground);
-  background-color: var(--surface-muted);
+  border-color: var(--accent-border);
+  background-color: var(--surface-subtle);
+  box-shadow: var(--shadow-xs);
 }
 
 .accountSelect:focus-visible,
@@ -202,9 +212,13 @@
 .statusText {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding-right: 4px;
-  color: var(--subtle-foreground);
+  gap: 7px;
+  height: 26px;
+  padding: 0 10px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface-subtle);
+  color: var(--muted-foreground);
   font-family: var(--font-mono);
   font-size: 10.5px;
   font-variant-numeric: tabular-nums;
@@ -214,13 +228,15 @@
 .statusDot {
   width: 6px;
   height: 6px;
-  border-radius: 1px;
+  border-radius: 999px;
   background: var(--positive);
+  box-shadow: 0 0 0 3px var(--positive-soft);
   flex-shrink: 0;
 }
 
 .statusDotStale {
   background: var(--warning);
+  box-shadow: 0 0 0 3px var(--warning-soft);
 }
 
 .iconButton {
@@ -397,14 +413,22 @@
   }
 
   .accountSelect {
-    width: 94px;
-    padding: 0 18px 0 7px;
+    width: 112px;
+    padding: 0 20px 0 9px;
     background-position: calc(100% - 10px) 13px, calc(100% - 6px) 13px;
-    font-size: 11px;
+    font-size: 11.5px;
   }
 
   .iconButton {
     width: 28px;
     height: 28px;
+  }
+}
+
+@media (max-width: 360px) {
+  .accountSelect {
+    width: 94px;
+    padding: 0 18px 0 7px;
+    font-size: 11px;
   }
 }

@@ -52,6 +52,15 @@
   min-width: 0;
   padding: var(--space-4) var(--space-5);
   border-right: 1px solid var(--border);
+  transition: background-color var(--duration-fast) var(--ease-out);
+}
+
+.summaryItemPositive {
+  box-shadow: inset 0 2px 0 var(--positive);
+}
+
+.summaryItemNegative {
+  box-shadow: inset 0 2px 0 var(--negative);
 }
 
 .summaryItem:last-child {
@@ -211,6 +220,7 @@
   bottom: -1px;
   left: 0;
   height: 2px;
+  border-radius: 2px 2px 0 0;
   background: var(--accent);
 }
 
@@ -237,14 +247,21 @@
 }
 
 .tabCount {
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: var(--surface-muted);
   color: var(--subtle-foreground);
   font-family: var(--font-mono);
-  font-size: 10.5px;
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1.5;
   font-variant-numeric: tabular-nums;
+  transition: background-color var(--duration-fast) var(--ease-out), color var(--duration-fast) var(--ease-out);
 }
 
 .tabButtonActive .tabCount {
-  color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--accent-strong);
 }
 
 .contentArea {
@@ -280,28 +297,25 @@
 .rangeGroup {
   display: inline-flex;
   align-items: center;
+  gap: 2px;
+  padding: 2px;
   border: 1px solid var(--border-strong);
   border-radius: var(--radius-sm);
   background: var(--surface-subtle);
-  overflow: hidden;
 }
 
 .rangeButton {
-  height: 28px;
-  padding: 0 11px;
+  height: 26px;
+  padding: 0 10px;
   border: 0;
-  border-right: 1px solid var(--border);
+  border-radius: var(--radius-xs);
   background: transparent;
   color: var(--muted-foreground);
   font-family: var(--font-mono);
   font-size: 11px;
   font-weight: 500;
   cursor: pointer;
-  transition: color var(--duration-fast) var(--ease-out), background-color var(--duration-fast) var(--ease-out);
-}
-
-.rangeButton:last-child {
-  border-right: 0;
+  transition: color var(--duration-fast) var(--ease-out), background-color var(--duration-fast) var(--ease-out), box-shadow var(--duration-fast) var(--ease-out);
 }
 
 .rangeButton:hover:not(:disabled) {
@@ -315,13 +329,14 @@
 }
 
 .rangeButtonActive {
-  background: var(--accent);
+  background: var(--accent-solid);
   color: #ffffff;
   font-weight: 600;
+  box-shadow: var(--shadow-xs);
 }
 
 .rangeButtonActive:hover:not(:disabled) {
-  background: var(--accent-strong);
+  background: var(--accent-solid-hover);
   color: #ffffff;
 }
 
@@ -333,6 +348,7 @@
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   background: var(--surface-raised);
+  box-shadow: var(--shadow-card);
 }
 
 .chartStatsBar {
@@ -372,9 +388,62 @@
   height: 416px;
 }
 
+.donutStage {
+  position: relative;
+  width: 100%;
+}
+
 .donutContainer {
   width: 100%;
   height: 296px;
+}
+
+.donutCenter {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  max-width: 148px;
+  margin: 0 auto;
+  text-align: center;
+  pointer-events: none;
+}
+
+.donutCenterValue {
+  color: var(--foreground);
+  font-family: var(--font-mono);
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+
+.donutCenterLabel {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--subtle-foreground);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.donutCenterDot {
+  width: 6px;
+  height: 6px;
+  flex: 0 0 6px;
+  border-radius: 1.5px;
 }
 
 /* Holdings architectural split grid */
@@ -392,6 +461,7 @@
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   background: var(--surface-raised);
+  box-shadow: var(--shadow-card);
 }
 
 @media (min-width: 961px) {
@@ -449,7 +519,12 @@
   color: var(--foreground);
   font-size: 12px;
   outline: none;
-  transition: border-color var(--duration-fast) var(--ease-out), background-color var(--duration-fast) var(--ease-out);
+  transition: border-color var(--duration-fast) var(--ease-out), background-color var(--duration-fast) var(--ease-out), box-shadow var(--duration-fast) var(--ease-out);
+}
+
+.searchInput::-webkit-search-cancel-button {
+  -webkit-appearance: none;
+  appearance: none;
 }
 
 .searchInput::placeholder {
@@ -459,6 +534,7 @@
 .searchInput:focus {
   border-color: var(--accent);
   background: var(--surface);
+  box-shadow: 0 0 0 3px var(--accent-soft);
 }
 
 .clearButton {
@@ -596,18 +672,19 @@
 }
 
 .customTable tbody tr {
-  transition: background-color var(--duration-fast) var(--ease-out);
+  transition: background-color var(--duration-fast) var(--ease-out), box-shadow var(--duration-fast) var(--ease-out);
 }
 
 .customTable tbody tr:hover,
 .rowActive {
   background: var(--surface-muted);
+  box-shadow: inset 2px 0 0 var(--accent);
 }
 
 .sortButton {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: 5px;
   padding: 0;
   border: 0;
   background: transparent;
@@ -616,16 +693,17 @@
   text-transform: inherit;
   letter-spacing: inherit;
   cursor: pointer;
+  transition: color var(--duration-fast) var(--ease-out);
 }
 
-.sortButton:hover {
+.sortButton:hover,
+.sortButtonActive {
   color: var(--foreground);
 }
 
 .sortIcon {
-  width: 11px;
-  height: 11px;
-  opacity: 0.55;
+  width: 12px;
+  height: 12px;
 }
 
 .symbolCell {
@@ -708,22 +786,27 @@
 
 .returnPill {
   display: inline-block;
-  padding: 2px 6px;
+  min-width: 72px;
+  padding: 2px 7px;
+  border: 1px solid transparent;
   border-radius: var(--radius-xs);
   font-family: var(--font-mono);
   font-size: 12px;
   font-weight: 500;
+  text-align: right;
   font-variant-numeric: tabular-nums;
 }
 
 .returnPillPositive {
   color: var(--positive);
   background: var(--positive-soft);
+  border-color: var(--positive-border);
 }
 
 .returnPillNegative {
   color: var(--negative);
   background: var(--negative-soft);
+  border-color: var(--negative-border);
 }
 
 .allocationCell {
@@ -740,17 +823,18 @@
 
 .allocationTrack {
   width: 68px;
-  height: 5px;
+  height: 6px;
   overflow: hidden;
-  border-radius: 1px;
+  border-radius: 2px;
   background: var(--surface-muted);
 }
 
 .allocationFill {
   display: block;
   height: 100%;
-  border-radius: 1px;
+  border-radius: 2px;
   background: var(--accent);
+  transition: width var(--duration-base) var(--ease-out);
 }
 
 .emptyTableMessage {
@@ -778,10 +862,11 @@
 .researchTitle {
   max-width: 720px;
   margin: var(--space-2) 0 0;
-  font-size: clamp(22px, 2.8vw, 32px);
-  font-weight: 600;
-  letter-spacing: -0.02em;
-  line-height: 1.18;
+  font-family: var(--font-serif);
+  font-size: clamp(24px, 3vw, 34px);
+  font-weight: 500;
+  letter-spacing: -0.025em;
+  line-height: 1.15;
 }
 
 .researchDescription {
@@ -917,6 +1002,11 @@
 }
 
 .reportBody h1,
+.reportBody h2 {
+  font-family: var(--font-serif);
+}
+
+.reportBody h1,
 .reportBody h2,
 .reportBody h3 {
   color: var(--foreground);
@@ -979,7 +1069,9 @@
 .reportBody blockquote {
   margin-left: 0;
   padding: var(--space-4) var(--space-5);
-  border-left: 2px solid var(--accent);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--accent);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
   background: var(--surface-subtle);
   color: var(--muted-foreground);
   font-size: 13.5px;
@@ -1004,9 +1096,10 @@
   width: 100%;
   overflow-x: auto;
   border: 1px solid var(--border);
-  border-radius: var(--radius-xs);
+  border-radius: var(--radius-sm);
   border-spacing: 0;
   font-size: 12.5px;
+  font-variant-numeric: tabular-nums;
 }
 
 .reportBody th,
@@ -1025,6 +1118,14 @@
   font-family: var(--font-mono);
   font-size: 10.5px;
   text-transform: uppercase;
+}
+
+.reportBody tbody tr:nth-child(even) td {
+  background: var(--surface-subtle);
+}
+
+.reportBody tbody tr:hover td {
+  background: var(--surface-muted);
 }
 
 .reportBody tr:last-child td {
@@ -1193,7 +1294,13 @@
   .navTabs {
     min-width: max-content;
     height: 44px;
+    gap: 14px;
     padding: 0 var(--space-4);
+  }
+
+  .tabButton {
+    font-size: 12.5px;
+    gap: 5px;
   }
 
   .contentArea {

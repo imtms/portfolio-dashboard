@@ -25,7 +25,7 @@ export default function MyApp({ Component, pageProps }) {
     <>
       <Head>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <meta name="theme-color" content="#f1f5f9" />
+        <meta name="theme-color" content="#eef2f6" />
       </Head>
       <style jsx global>{`
         :root {

@@ -1,6 +1,6 @@
 import * as echarts from "echarts/core";
 import { LineChart, PieChart } from "echarts/charts";
-import { GridComponent, MarkLineComponent, TitleComponent, TooltipComponent } from "echarts/components";
+import { GridComponent, MarkLineComponent, MarkPointComponent, TitleComponent, TooltipComponent } from "echarts/components";
 import { CanvasRenderer } from "echarts/renderers";
 
 echarts.use([
@@ -8,6 +8,7 @@ echarts.use([
   PieChart,
   GridComponent,
   MarkLineComponent,
+  MarkPointComponent,
   TitleComponent,
   TooltipComponent,
   CanvasRenderer,

@@ -31,6 +31,7 @@ export default function StockHoldings({ holdings, darkMode }) {
   const [sortOrder, setSortOrder] = useState("desc");
   const [query, setQuery] = useState("");
   const [activeSliceKey, setActiveSliceKey] = useState(null);
+  const [activeRowSymbol, setActiveRowSymbol] = useState(null);
 
   const hasHoldings = holdings.length > 0;
   const theme = useMemo(() => getChartTheme(darkMode), [darkMode]);
@@ -73,6 +74,35 @@ export default function StockHoldings({ holdings, darkMode }) {
     return { chartData: slices, sliceLookup: lookup, otherCount: tail.length, maxAllocation: maxWeight };
   }, [holdings, theme]);
 
+  const activeCenter = useMemo(() => {
+    if (activeRowSymbol) {
+      const holding = holdings.find((item) => item.symbol === activeRowSymbol);
+      if (holding) {
+        const entry = sliceLookup.get(holding.symbol);
+        return {
+          primary: `${(holding.allocationInPercentage * 100).toFixed(1)}%`,
+          secondary: holding.symbol,
+          color: entry?.color || theme.other,
+        };
+      }
+    }
+    if (activeSliceKey) {
+      const slice = chartData.find((item) => item.key === activeSliceKey);
+      if (slice) {
+        return {
+          primary: `${slice.value.toFixed(1)}%`,
+          secondary: slice.name,
+          color: slice.itemStyle.color,
+        };
+      }
+    }
+    return {
+      primary: `${holdings.length}`,
+      secondary: "POSITIONS",
+      color: null,
+    };
+  }, [activeRowSymbol, activeSliceKey, holdings, chartData, sliceLookup, theme.other]);
+
   const option = useMemo(() => {
     const monoFont = getMonoFontFamily();
     return {
@@ -83,34 +113,30 @@ export default function StockHoldings({ holdings, darkMode }) {
         backgroundColor: theme.tooltip,
         borderColor: theme.border,
         borderWidth: 1,
-        borderRadius: 3,
+        borderRadius: 5,
         padding: [8, 12],
+        extraCssText: `box-shadow: 0 8px 24px ${theme.shadow};`,
         textStyle: { color: theme.foreground, fontFamily: monoFont, fontSize: 12 },
-        formatter: ({ name, value }) => `<strong>${name}</strong><br/><span style="color:${theme.muted}">${Number(value).toFixed(2)}% weight</span>`,
-      },
-      title: {
-        text: `${holdings.length}`,
-        subtext: "POSITIONS",
-        left: "center",
-        top: "40%",
-        textStyle: { color: theme.foreground, fontFamily: monoFont, fontSize: 22, fontWeight: 600 },
-        subtextStyle: { color: theme.subtle, fontFamily: monoFont, fontSize: 9.5, fontWeight: 600 },
+        formatter: ({ name, value, color }) => (
+          `<div style="display:flex;align-items:center;gap:7px;margin-bottom:3px"><span style="width:7px;height:7px;border-radius:1.5px;background:${color};display:inline-block"></span><strong>${name}</strong></div>`
+          + `<span style="color:${theme.muted};font-size:11px">${Number(value).toFixed(2)}% weight</span>`
+        ),
       },
       series: [{
         name: "Stock allocation",
         type: "pie",
-        radius: ["58%", "78%"],
+        radius: ["62%", "82%"],
         center: ["50%", "50%"],
         minAngle: 2,
-        padAngle: 1.5,
-        itemStyle: { borderRadius: 2, borderColor: theme.surface, borderWidth: 1.5 },
+        padAngle: 2,
+        itemStyle: { borderRadius: 3, borderColor: theme.surface, borderWidth: 2 },
         label: { show: false },
         labelLine: { show: false },
-        emphasis: { scaleSize: 4 },
+        emphasis: { scaleSize: 5 },
         data: chartData,
       }],
     };
-  }, [chartData, holdings.length, theme]);
+  }, [chartData, theme]);
 
   useEffect(() => {
     if (!chartRef.current || !hasHoldings) return undefined;
@@ -126,17 +152,41 @@ export default function StockHoldings({ holdings, darkMode }) {
   }, [hasHoldings]);
 
   useEffect(() => {
-    if (!chartInstance.current || !hasHoldings) return;
-    chartInstance.current.setOption(option, { notMerge: true });
-  }, [option, hasHoldings]);
+    if (!chartInstance.current || !hasHoldings) return undefined;
+    const instance = chartInstance.current;
+    instance.setOption(option, { notMerge: true });
 
-  const highlightSlice = useCallback((symbolOrKey) => {
+    const handleMouseOver = (params) => {
+      const slice = chartData[params.dataIndex];
+      if (!slice) return;
+      setActiveRowSymbol(null);
+      setActiveSliceKey(slice.key);
+    };
+    const handleMouseOut = () => {
+      setActiveRowSymbol(null);
+      setActiveSliceKey(null);
+    };
+
+    instance.on("mouseover", handleMouseOver);
+    instance.on("mouseout", handleMouseOut);
+    instance.on("globalout", handleMouseOut);
+    return () => {
+      instance.off("mouseover", handleMouseOver);
+      instance.off("mouseout", handleMouseOut);
+      instance.off("globalout", handleMouseOut);
+    };
+  }, [option, chartData, hasHoldings]);
+
+  const highlightSlice = useCallback((symbolOrKey, isRow = false) => {
     const entry = sliceLookup.get(symbolOrKey);
     if (!entry) return;
     setActiveSliceKey(entry.key);
+    setActiveRowSymbol(isRow ? symbolOrKey : null);
     if (chartInstance.current) {
       chartInstance.current.dispatchAction({ type: "highlight", seriesIndex: 0, dataIndex: entry.idx });
-      chartInstance.current.dispatchAction({ type: "showTip", seriesIndex: 0, dataIndex: entry.idx });
+      if (!isRow) {
+        chartInstance.current.dispatchAction({ type: "showTip", seriesIndex: 0, dataIndex: entry.idx });
+      }
     }
   }, [sliceLookup]);
 
@@ -144,6 +194,7 @@ export default function StockHoldings({ holdings, darkMode }) {
     const entry = sliceLookup.get(symbolOrKey);
     if (!entry) return;
     setActiveSliceKey((prev) => (prev === entry.key ? null : prev));
+    setActiveRowSymbol((prev) => (prev === symbolOrKey ? null : prev));
     if (chartInstance.current) {
       chartInstance.current.dispatchAction({ type: "downplay", seriesIndex: 0, dataIndex: entry.idx });
       chartInstance.current.dispatchAction({ type: "hideTip" });
@@ -210,7 +261,16 @@ export default function StockHoldings({ holdings, darkMode }) {
               {otherCount > 0 ? `Top ${MAX_NAMED_SLICES} + Other` : `${holdings.length} positions`}
             </span>
           </div>
-          <div ref={chartRef} className={styles.donutContainer} />
+          <div className={styles.donutStage}>
+            <div ref={chartRef} className={styles.donutContainer} />
+            <div className={styles.donutCenter} aria-hidden="true">
+              <strong className={styles.donutCenterValue}>{activeCenter.primary}</strong>
+              <span className={styles.donutCenterLabel}>
+                {activeCenter.color && <span className={styles.donutCenterDot} style={{ background: activeCenter.color }} />}
+                {activeCenter.secondary}
+              </span>
+            </div>
+          </div>
           <div className={styles.chartLegend}>
             {chartData.map((item) => (
               <div
@@ -257,12 +317,15 @@ export default function StockHoldings({ holdings, darkMode }) {
                       ? Math.max(4, Math.min(100, (holding.allocationInPercentage / maxAllocation) * 100))
                       : 0;
                     const isPositive = holding.netPerformancePercent >= 0;
+                    const isRowActive = activeRowSymbol
+                      ? activeRowSymbol === holding.symbol
+                      : Boolean(activeSliceKey && sliceInfo?.key === activeSliceKey);
 
                     return (
                       <tr
                         key={`${holding.symbol}-${holding.name}`}
-                        className={activeSliceKey && activeSliceKey === holding.symbol ? styles.rowActive : undefined}
-                        onMouseEnter={() => highlightSlice(holding.symbol)}
+                        className={isRowActive ? styles.rowActive : undefined}
+                        onMouseEnter={() => highlightSlice(holding.symbol, true)}
                         onMouseLeave={() => clearHighlight(holding.symbol)}
                       >
                         <td className={styles.symbolCell}>

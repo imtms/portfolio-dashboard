@@ -89,6 +89,10 @@ export default function PerformanceChart({ data, darkMode }) {
 
   const option = useMemo(() => {
     const monoFont = getMonoFontFamily();
+    const crossesZero = Number.isFinite(stats.low) && Number.isFinite(stats.high) && stats.low < 0 && stats.high > 0;
+    const lastPoint = visibleData.at(-1);
+    const lastValue = lastPoint ? Number(lastPoint.netPerformanceInPercentage.toFixed(2)) : null;
+
     return {
       animationDuration: 360,
       animationDurationUpdate: 260,
@@ -98,18 +102,29 @@ export default function PerformanceChart({ data, darkMode }) {
         backgroundColor: theme.tooltip,
         borderColor: theme.border,
         borderWidth: 1,
-        borderRadius: 3,
-        padding: [8, 12],
+        borderRadius: 5,
+        padding: [10, 12],
+        extraCssText: `box-shadow: 0 8px 24px ${theme.shadow};`,
         textStyle: { color: theme.foreground, fontFamily: monoFont, fontSize: 12 },
         formatter: (params) => {
           const point = params[0];
           const value = Number(point.value);
           const color = value >= 0 ? theme.positive : theme.negative;
-          return `<span style="color:${theme.subtle};font-size:10.5px">${point.axisValue}</span><br/><strong style="font-size:13px;color:${color}">${value >= 0 ? "+" : ""}${value.toFixed(2)}%</strong>`;
+          const sign = value >= 0 ? "+" : "";
+          return [
+            `<div style="font-size:10px;letter-spacing:0.06em;color:${theme.subtle};margin-bottom:6px">${point.axisValue}</div>`,
+            `<div style="display:flex;align-items:center;justify-content:space-between;gap:16px">`,
+            `<span style="display:inline-flex;align-items:center;gap:6px;color:${theme.muted};font-size:11px"><span style="width:7px;height:7px;border-radius:999px;background:${theme.accent};display:inline-block"></span>Net return</span>`,
+            `<strong style="font-size:13px;font-weight:600;color:${color}">${sign}${value.toFixed(2)}%</strong>`,
+            `</div>`,
+          ].join("");
         },
-        axisPointer: { type: "line", lineStyle: { color: theme.border, type: "solid", width: 1 } },
+        axisPointer: {
+          type: "line",
+          lineStyle: { color: theme.pointer, type: "dashed", width: 1 },
+        },
       },
-      grid: { left: 16, right: 24, top: 24, bottom: 14, containLabel: true },
+      grid: { left: 16, right: 26, top: 24, bottom: 14, containLabel: true },
       xAxis: {
         type: "category",
         boundaryGap: false,
@@ -129,7 +144,12 @@ export default function PerformanceChart({ data, darkMode }) {
       yAxis: {
         type: "value",
         scale: true,
-        axisLabel: { formatter: (value) => `${value}%`, color: theme.muted, fontFamily: monoFont, fontSize: 10.5 },
+        axisLabel: {
+          formatter: (value) => `${value > 0 ? "+" : ""}${value}%`,
+          color: theme.muted,
+          fontFamily: monoFont,
+          fontSize: 10.5,
+        },
         axisLine: { show: false },
         axisTick: { show: false },
         splitNumber: 5,
@@ -138,27 +158,50 @@ export default function PerformanceChart({ data, darkMode }) {
       series: [{
         data: visibleData.map((item) => Number(item.netPerformanceInPercentage.toFixed(2))),
         type: "line",
-        smooth: 0.12,
+        smooth: 0.14,
         showSymbol: false,
+        symbol: "circle",
         symbolSize: 6,
-        lineStyle: { color: theme.accent, width: 2 },
-        itemStyle: { color: theme.accent, borderColor: theme.tooltip, borderWidth: 2 },
+        lineStyle: { color: theme.accent, width: 2.2 },
+        itemStyle: { color: theme.accent, borderColor: theme.surface, borderWidth: 2 },
         emphasis: { focus: "series", scale: true },
-        markLine: {
-          silent: true,
-          symbol: "none",
-          lineStyle: { color: theme.border, type: "dashed", width: 1 },
-          label: {
-            show: true,
-            position: "insideEndTop",
-            formatter: "0%",
-            color: theme.subtle,
-            fontFamily: monoFont,
-            fontSize: 10,
-            distance: 4,
-          },
-          data: [{ yAxis: 0 }],
-        },
+        ...(lastPoint && Number.isFinite(lastValue)
+          ? {
+            markPoint: {
+              silent: true,
+              symbol: "circle",
+              symbolSize: 8,
+              itemStyle: {
+                color: theme.accent,
+                borderColor: theme.surface,
+                borderWidth: 2,
+                shadowBlur: 10,
+                shadowColor: theme.pointer,
+              },
+              label: { show: false },
+              data: [{ coord: [lastPoint.date, lastValue] }],
+            },
+          }
+          : {}),
+        ...(crossesZero
+          ? {
+            markLine: {
+              silent: true,
+              symbol: "none",
+              lineStyle: { color: theme.border, type: "dashed", width: 1 },
+              label: {
+                show: true,
+                position: "insideEndTop",
+                formatter: "0%",
+                color: theme.subtle,
+                fontFamily: monoFont,
+                fontSize: 10,
+                distance: 4,
+              },
+              data: [{ yAxis: 0 }],
+            },
+          }
+          : {}),
         areaStyle: {
           color: {
             type: "linear",
@@ -168,13 +211,14 @@ export default function PerformanceChart({ data, darkMode }) {
             y2: 1,
             colorStops: [
               { offset: 0, color: theme.areaTop },
+              { offset: 0.55, color: theme.areaMid },
               { offset: 1, color: theme.areaBottom },
             ],
           },
         },
       }],
     };
-  }, [visibleData, theme]);
+  }, [visibleData, stats.low, stats.high, theme]);
 
   useEffect(() => {
     if (!chartRef.current || !hasVisibleData) return undefined;
@@ -234,7 +278,7 @@ export default function PerformanceChart({ data, darkMode }) {
           <div className={styles.chartStatItem}>
             <span className={styles.panelLabel}>Window</span>
             <span className={styles.chartStatValue}>
-              {visibleData[0]?.date} — {visibleData.at(-1)?.date}
+              {visibleData[0]?.date} → {visibleData.at(-1)?.date}
             </span>
           </div>
           <div className={styles.chartStatItem}>

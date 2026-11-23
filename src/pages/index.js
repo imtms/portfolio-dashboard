@@ -92,6 +92,12 @@ export default function Home() {
       ? styles.summaryBadgePositive
       : styles.summaryBadgeNegative;
 
+  const netHeroClass = !Number.isFinite(summary.currentPerformance)
+    ? ""
+    : summary.currentPerformance >= 0
+      ? styles.summaryItemPositive
+      : styles.summaryItemNegative;
+
   const isAtPeak = Number.isFinite(summary.drawdownFromPeak) && Math.abs(summary.drawdownFromPeak) < 0.005;
   const drawdownColorClass = !Number.isFinite(summary.drawdownFromPeak)
     ? ""
@@ -124,7 +130,7 @@ export default function Home() {
 
         <section className={styles.dashboardShell}>
           <div className={styles.summaryStrip} aria-label="Portfolio summary">
-            <div className={styles.summaryItem}>
+            <div className={`${styles.summaryItem} ${netHeroClass}`}>
               <div className={styles.summaryHeader}>
                 <span className={styles.summaryLabel}>Net return</span>
               </div>

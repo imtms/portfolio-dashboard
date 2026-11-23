@@ -40,6 +40,24 @@ export default function CurrencyHoldings({ holdings, darkMode }) {
     return map;
   }, [chartData]);
 
+  const activeCenter = useMemo(() => {
+    if (activeCurrency) {
+      const slice = chartData.find((item) => item.name === activeCurrency);
+      if (slice) {
+        return {
+          primary: `${slice.value.toFixed(1)}%`,
+          secondary: slice.name,
+          color: slice.itemStyle.color,
+        };
+      }
+    }
+    return {
+      primary: `${holdings.length}`,
+      secondary: "CURRENCIES",
+      color: null,
+    };
+  }, [activeCurrency, chartData, holdings.length]);
+
   const option = useMemo(() => {
     const monoFont = getMonoFontFamily();
     return {
@@ -50,34 +68,30 @@ export default function CurrencyHoldings({ holdings, darkMode }) {
         backgroundColor: theme.tooltip,
         borderColor: theme.border,
         borderWidth: 1,
-        borderRadius: 3,
+        borderRadius: 5,
         padding: [8, 12],
+        extraCssText: `box-shadow: 0 8px 24px ${theme.shadow};`,
         textStyle: { color: theme.foreground, fontFamily: monoFont, fontSize: 12 },
-        formatter: ({ name, value }) => `<strong>${name}</strong><br/><span style="color:${theme.muted}">${Number(value).toFixed(2)}% exposure</span>`,
-      },
-      title: {
-        text: `${holdings.length}`,
-        subtext: "CURRENCIES",
-        left: "center",
-        top: "40%",
-        textStyle: { color: theme.foreground, fontFamily: monoFont, fontSize: 22, fontWeight: 600 },
-        subtextStyle: { color: theme.subtle, fontFamily: monoFont, fontSize: 9.5, fontWeight: 600 },
+        formatter: ({ name, value, color }) => (
+          `<div style="display:flex;align-items:center;gap:7px;margin-bottom:3px"><span style="width:7px;height:7px;border-radius:1.5px;background:${color};display:inline-block"></span><strong>${name}</strong></div>`
+          + `<span style="color:${theme.muted};font-size:11px">${Number(value).toFixed(2)}% exposure</span>`
+        ),
       },
       series: [{
         name: "Currency allocation",
         type: "pie",
-        radius: ["58%", "78%"],
+        radius: ["62%", "82%"],
         center: ["50%", "50%"],
         minAngle: 2,
-        padAngle: 1.5,
-        itemStyle: { borderRadius: 2, borderColor: theme.surface, borderWidth: 1.5 },
+        padAngle: 2,
+        itemStyle: { borderRadius: 3, borderColor: theme.surface, borderWidth: 2 },
         label: { show: false },
         labelLine: { show: false },
-        emphasis: { scaleSize: 4 },
+        emphasis: { scaleSize: 5 },
         data: chartData,
       }],
     };
-  }, [chartData, holdings.length, theme]);
+  }, [chartData, theme]);
 
   useEffect(() => {
     if (!chartRef.current || !hasHoldings) return undefined;
@@ -93,16 +107,34 @@ export default function CurrencyHoldings({ holdings, darkMode }) {
   }, [hasHoldings]);
 
   useEffect(() => {
-    if (!chartInstance.current || !hasHoldings) return;
-    chartInstance.current.setOption(option, { notMerge: true });
-  }, [option, hasHoldings]);
+    if (!chartInstance.current || !hasHoldings) return undefined;
+    const instance = chartInstance.current;
+    instance.setOption(option, { notMerge: true });
 
-  const highlightSlice = useCallback((currency) => {
+    const handleMouseOver = (params) => {
+      const slice = chartData[params.dataIndex];
+      if (slice) setActiveCurrency(slice.name);
+    };
+    const handleMouseOut = () => setActiveCurrency(null);
+
+    instance.on("mouseover", handleMouseOver);
+    instance.on("mouseout", handleMouseOut);
+    instance.on("globalout", handleMouseOut);
+    return () => {
+      instance.off("mouseover", handleMouseOver);
+      instance.off("mouseout", handleMouseOut);
+      instance.off("globalout", handleMouseOut);
+    };
+  }, [option, chartData, hasHoldings]);
+
+  const highlightSlice = useCallback((currency, isRow = false) => {
     setActiveCurrency(currency);
     const entry = indexByCurrency.get(currency);
     if (entry !== undefined && chartInstance.current) {
       chartInstance.current.dispatchAction({ type: "highlight", seriesIndex: 0, dataIndex: entry.idx });
-      chartInstance.current.dispatchAction({ type: "showTip", seriesIndex: 0, dataIndex: entry.idx });
+      if (!isRow) {
+        chartInstance.current.dispatchAction({ type: "showTip", seriesIndex: 0, dataIndex: entry.idx });
+      }
     }
   }, [indexByCurrency]);
 
@@ -147,7 +179,16 @@ export default function CurrencyHoldings({ holdings, darkMode }) {
             <h3 className={styles.subPanelTitle}>Exposure breakdown</h3>
             <span className={styles.sectionMeta}>100% total</span>
           </div>
-          <div ref={chartRef} className={styles.donutContainer} />
+          <div className={styles.donutStage}>
+            <div ref={chartRef} className={styles.donutContainer} />
+            <div className={styles.donutCenter} aria-hidden="true">
+              <strong className={styles.donutCenterValue}>{activeCenter.primary}</strong>
+              <span className={styles.donutCenterLabel}>
+                {activeCenter.color && <span className={styles.donutCenterDot} style={{ background: activeCenter.color }} />}
+                {activeCenter.secondary}
+              </span>
+            </div>
+          </div>
           <div className={styles.chartLegend}>
             {chartData.map((item) => (
               <div
@@ -186,7 +227,7 @@ export default function CurrencyHoldings({ holdings, darkMode }) {
                     <tr
                       key={holding.currency}
                       className={activeCurrency === holding.currency ? styles.rowActive : undefined}
-                      onMouseEnter={() => highlightSlice(holding.currency)}
+                      onMouseEnter={() => highlightSlice(holding.currency, true)}
                       onMouseLeave={() => clearHighlight(holding.currency)}
                     >
                       <td className={styles.symbolCell}>
