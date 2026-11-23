@@ -2,9 +2,9 @@
   position: sticky;
   top: 0;
   z-index: 40;
-  height: 56px;
+  height: var(--navbar-height);
   border-bottom: 1px solid var(--border);
-  background: color-mix(in srgb, var(--surface) 92%, transparent);
+  background: color-mix(in srgb, var(--surface) 90%, transparent);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
 }
@@ -68,7 +68,7 @@
 
 .brandText b {
   font-size: 13.5px;
-  font-weight: 650;
+  font-weight: 600;
   letter-spacing: -0.02em;
   line-height: 1.2;
 }
@@ -76,10 +76,10 @@
 .brandText small {
   margin-top: 1px;
   font-family: var(--font-mono);
-  font-size: 9px;
+  font-size: 9.5px;
   color: var(--subtle-foreground);
   text-transform: uppercase;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.11em;
 }
 
 .productNav {
@@ -98,7 +98,7 @@
   gap: 4px;
   color: var(--muted-foreground);
   font-size: 13px;
-  font-weight: 520;
+  font-weight: 500;
   white-space: nowrap;
   transition: color var(--duration-fast) var(--ease-out);
 }
@@ -109,7 +109,7 @@
 
 .productNav .activeNav {
   color: var(--foreground);
-  font-weight: 620;
+  font-weight: 600;
 }
 
 .productNav .activeNav::after {
@@ -170,7 +170,7 @@
   background-size: 4px 4px, 4px 4px;
   color: var(--foreground);
   font-size: 12px;
-  font-weight: 520;
+  font-weight: 500;
   outline: none;
   cursor: pointer;
   transition: border-color var(--duration-fast) var(--ease-out), background-color var(--duration-fast) var(--ease-out);
@@ -212,10 +212,10 @@
 }
 
 .statusDot {
-  width: 5px;
-  height: 5px;
+  width: 6px;
+  height: 6px;
   border-radius: 1px;
-  background: var(--accent);
+  background: var(--positive);
   flex-shrink: 0;
 }
 
@@ -249,6 +249,23 @@
   stroke-width: 1.7;
 }
 
+/* CSS-driven theme icon swap prevents SSR/CSR hydration mismatch and first-paint flash */
+.themeIconSun {
+  display: none;
+}
+
+.themeIconMoon {
+  display: block;
+}
+
+:global([data-theme="dark"]) .themeIconSun {
+  display: block;
+}
+
+:global([data-theme="dark"]) .themeIconMoon {
+  display: none;
+}
+
 .refreshButton {
   display: inline-flex;
   width: auto;
@@ -268,7 +285,7 @@
   min-width: 56px;
   font-family: var(--font-mono);
   font-size: 11px;
-  font-weight: 550;
+  font-weight: 500;
   text-align: left;
   color: var(--foreground);
 }
@@ -360,11 +377,19 @@
 @media (max-width: 440px) {
   .topbarInner {
     width: min(100% - 24px, 1320px);
-    gap: 0 8px;
+    gap: 0 6px;
+  }
+
+  .brand {
+    gap: 7px;
   }
 
   .brandText b {
-    font-size: 13px;
+    font-size: 12.5px;
+  }
+
+  .navActions {
+    gap: 6px;
   }
 
   .accountIcon {
@@ -372,12 +397,14 @@
   }
 
   .accountSelect {
-    width: 104px;
-    padding: 0 20px 0 8px;
+    width: 94px;
+    padding: 0 18px 0 7px;
+    background-position: calc(100% - 10px) 13px, calc(100% - 6px) 13px;
+    font-size: 11px;
   }
 
   .iconButton {
-    width: 30px;
-    height: 30px;
+    width: 28px;
+    height: 28px;
   }
 }

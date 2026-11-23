@@ -1,8 +1,16 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useSyncExternalStore } from "react";
 
 const STORAGE_KEY = "portfolio-theme";
+const LIGHT_THEME_COLOR = "#f1f5f9";
+const DARK_THEME_COLOR = "#080c14";
 
-function readInitialTheme() {
+const listeners = new Set();
+
+function notifyListeners() {
+  listeners.forEach((listener) => listener());
+}
+
+function readClientTheme() {
   if (typeof window === "undefined") return false;
   const domTheme = document.documentElement.dataset.theme;
   if (domTheme === "dark" || domTheme === "light") return domTheme === "dark";
@@ -13,41 +21,61 @@ function readInitialTheme() {
   return window.matchMedia("(prefers-color-scheme: dark)").matches;
 }
 
-export function useTheme() {
-  const [darkMode, setDarkMode] = useState(readInitialTheme);
+function applyThemeToDom(isDark) {
+  if (typeof document === "undefined") return;
+  document.documentElement.dataset.theme = isDark ? "dark" : "light";
+  const metaTheme = document.querySelector('meta[name="theme-color"]');
+  if (metaTheme) {
+    metaTheme.setAttribute("content", isDark ? DARK_THEME_COLOR : LIGHT_THEME_COLOR);
+  }
+}
 
-  useEffect(() => {
-    const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
-    const handleChange = (event) => {
-      try {
-        if (!window.localStorage.getItem(STORAGE_KEY)) {
-          setDarkMode(event.matches);
-        }
-      } catch {
-        setDarkMode(event.matches);
-      }
-    };
-    mediaQuery.addEventListener?.("change", handleChange);
-    return () => mediaQuery.removeEventListener?.("change", handleChange);
-  }, []);
+function subscribe(listener) {
+  listeners.add(listener);
+  if (typeof window === "undefined") return () => listeners.delete(listener);
 
-  useEffect(() => {
-    document.documentElement.dataset.theme = darkMode ? "dark" : "light";
-    const metaTheme = document.querySelector('meta[name="theme-color"]');
-    if (metaTheme) {
-      metaTheme.setAttribute("content", darkMode ? "#090d16" : "#f8fafc");
+  const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+  const handleMediaChange = (event) => {
+    let hasStored = false;
+    try {
+      hasStored = Boolean(window.localStorage.getItem(STORAGE_KEY));
+    } catch { /* ignore storage errors */ }
+    if (!hasStored) {
+      applyThemeToDom(event.matches);
+      notifyListeners();
     }
+  };
+  const handleStorageChange = (event) => {
+    if (event.key === STORAGE_KEY) {
+      applyThemeToDom(event.newValue === "dark");
+      notifyListeners();
+    }
+  };
+
+  mediaQuery.addEventListener?.("change", handleMediaChange);
+  window.addEventListener("storage", handleStorageChange);
+
+  return () => {
+    listeners.delete(listener);
+    mediaQuery.removeEventListener?.("change", handleMediaChange);
+    window.removeEventListener("storage", handleStorageChange);
+  };
+}
+
+export function useTheme() {
+  const darkMode = useSyncExternalStore(subscribe, readClientTheme, () => false);
+
+  useEffect(() => {
+    applyThemeToDom(darkMode);
   }, [darkMode]);
 
   const toggleDarkMode = useCallback(() => {
-    setDarkMode((current) => {
-      const next = !current;
-      try {
-        window.localStorage.setItem(STORAGE_KEY, next ? "dark" : "light");
-      } catch { /* ignore storage errors */ }
-      document.documentElement.dataset.theme = next ? "dark" : "light";
-      return next;
-    });
+    const next = !readClientTheme();
+    try {
+      window.localStorage.setItem(STORAGE_KEY, next ? "dark" : "light");
+    } catch { /* ignore storage errors */ }
+    applyThemeToDom(next);
+    notifyListeners();
   }, []);
 
   return { darkMode, toggleDarkMode };

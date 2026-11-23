@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { usePortfolioData } from "../hooks/usePortfolioData";
 import { useTheme } from "../hooks/useTheme";
@@ -37,26 +37,45 @@ function formatPerformance(value) {
   return `${value >= 0 ? "+" : ""}${value.toFixed(2)}%`;
 }
 
+function formatDrawdown(value) {
+  if (!Number.isFinite(value)) return "--";
+  if (Math.abs(value) < 0.005) return "At peak";
+  return `${value.toFixed(2)}%`;
+}
+
 export default function Home() {
   const { stockHoldings, currencyHoldings, chart, isLoading, isRefreshing, error, updatedAt, isStale, accounts, selectedAccountIds, loadDataForAccounts, refreshData } = usePortfolioData();
   const { darkMode, toggleDarkMode } = useTheme();
   const [activeTab, setActiveTab] = useState("performance");
+  const tabRefs = useRef([]);
 
   const summary = useMemo(() => {
-    const lastPoint = chart.at(-1);
-    const firstPoint = chart.at(0);
-    const currentPerformance = Number(lastPoint?.netPerformanceInPercentage);
-    const periodChange = Number.isFinite(currentPerformance) && Number.isFinite(Number(firstPoint?.netPerformanceInPercentage))
-      ? currentPerformance - Number(firstPoint.netPerformanceInPercentage)
+    const values = chart.map((point) => Number(point?.netPerformanceInPercentage)).filter(Number.isFinite);
+    const currentPerformance = values.length ? values.at(-1) : NaN;
+    const peak = values.length ? Math.max(...values) : NaN;
+    const drawdownFromPeak = Number.isFinite(currentPerformance) && Number.isFinite(peak)
+      ? currentPerformance - peak
       : NaN;
     const topHolding = [...stockHoldings].sort((a, b) => b.allocationInPercentage - a.allocationInPercentage)[0];
-    return { currentPerformance, periodChange, topHolding };
+    return { currentPerformance, peak, drawdownFromPeak, topHolding };
   }, [chart, stockHoldings]);
 
   const tabCounts = {
     stockHoldings: stockHoldings.length || undefined,
     currencyHoldings: currencyHoldings.length || undefined,
     research: "21 Nov",
+  };
+
+  const handleTabKeyDown = (event, index) => {
+    let nextIndex = null;
+    if (event.key === "ArrowRight") nextIndex = (index + 1) % tabs.length;
+    else if (event.key === "ArrowLeft") nextIndex = (index - 1 + tabs.length) % tabs.length;
+    else if (event.key === "Home") nextIndex = 0;
+    else if (event.key === "End") nextIndex = tabs.length - 1;
+    if (nextIndex === null) return;
+    event.preventDefault();
+    setActiveTab(tabs[nextIndex].id);
+    tabRefs.current[nextIndex]?.focus();
   };
 
   const renderContent = () => {
@@ -66,6 +85,21 @@ export default function Home() {
     if (activeTab === "currencyHoldings") return <CurrencyHoldings holdings={currencyHoldings} darkMode={darkMode} />;
     return <PerformanceChart data={chart} darkMode={darkMode} />;
   };
+
+  const netBadgeClass = !Number.isFinite(summary.currentPerformance)
+    ? styles.summaryBadgeNeutral
+    : summary.currentPerformance >= 0
+      ? styles.summaryBadgePositive
+      : styles.summaryBadgeNegative;
+
+  const isAtPeak = Number.isFinite(summary.drawdownFromPeak) && Math.abs(summary.drawdownFromPeak) < 0.005;
+  const drawdownColorClass = !Number.isFinite(summary.drawdownFromPeak)
+    ? ""
+    : isAtPeak
+      ? styles.positive
+      : styles.negative;
+
+  const showInitialSkeleton = isLoading && !chart.length && !stockHoldings.length;
 
   return (
     <>
@@ -91,51 +125,92 @@ export default function Home() {
         <section className={styles.dashboardShell}>
           <div className={styles.summaryStrip} aria-label="Portfolio summary">
             <div className={styles.summaryItem}>
-              <span className={styles.summaryLabel}>Net</span>
-              <span className={`${styles.summaryValue} ${summary.currentPerformance >= 0 ? styles.positive : styles.negative}`}>
-                {formatPerformance(summary.currentPerformance)}
-              </span>
-            </div>
-
-            <div className={styles.summaryItem}>
-              <span className={styles.summaryLabel}>Period</span>
-              <span className={styles.summaryValueGroup}>
-                <span className={`${styles.summaryValue} ${summary.periodChange >= 0 ? styles.positive : styles.negative}`}>
-                  {formatPerformance(summary.periodChange)}
-                </span>
-                {chart.length > 0 && <span className={styles.summarySub}>{chart.length}d</span>}
-              </span>
-            </div>
-
-            <div className={styles.summaryItem}>
-              <span className={styles.summaryLabel}>Top</span>
-              <span className={styles.summaryValueGroup}>
-                <span className={styles.summaryValue}>{summary.topHolding?.symbol || "--"}</span>
-                {summary.topHolding && (
-                  <span className={styles.summarySub}>{(summary.topHolding.allocationInPercentage * 100).toFixed(1)}%</span>
+              <div className={styles.summaryHeader}>
+                <span className={styles.summaryLabel}>Net return</span>
+              </div>
+              <div className={styles.summaryValueRow}>
+                {showInitialSkeleton ? (
+                  <span className={styles.summarySkeleton} aria-hidden="true" />
+                ) : (
+                  <>
+                    <span className={`${styles.summaryBadge} ${netBadgeClass}`}>
+                      {formatPerformance(summary.currentPerformance)}
+                    </span>
+                    {chart.length > 0 && <span className={styles.summarySub}>{chart.length}d tracked</span>}
+                  </>
                 )}
-              </span>
+              </div>
             </div>
 
             <div className={styles.summaryItem}>
-              <span className={styles.summaryLabel}>Scope</span>
-              <span className={styles.summaryValueGroup}>
-                <span className={styles.summaryValue}>{stockHoldings.length || "--"}</span>
-                <span className={styles.summarySub}>assets · {currencyHoldings.length} FX</span>
-              </span>
+              <div className={styles.summaryHeader}>
+                <span className={styles.summaryLabel}>From peak</span>
+              </div>
+              <div className={styles.summaryValueRow}>
+                {showInitialSkeleton ? (
+                  <span className={styles.summarySkeleton} aria-hidden="true" />
+                ) : (
+                  <>
+                    <span className={`${styles.summaryValue} ${drawdownColorClass}`}>
+                      {formatDrawdown(summary.drawdownFromPeak)}
+                    </span>
+                    {Number.isFinite(summary.peak) && !isAtPeak && (
+                      <span className={styles.summarySub}>peak {formatPerformance(summary.peak)}</span>
+                    )}
+                    {isAtPeak && <span className={styles.summarySub}>period high</span>}
+                  </>
+                )}
+              </div>
+            </div>
+
+            <div className={styles.summaryItem}>
+              <div className={styles.summaryHeader}>
+                <span className={styles.summaryLabel}>Top position</span>
+              </div>
+              <div className={styles.summaryValueRow}>
+                {showInitialSkeleton ? (
+                  <span className={styles.summarySkeleton} aria-hidden="true" />
+                ) : (
+                  <>
+                    <span className={styles.summaryValue}>{summary.topHolding?.symbol || "--"}</span>
+                    {summary.topHolding && (
+                      <span className={styles.summarySub}>{(summary.topHolding.allocationInPercentage * 100).toFixed(1)}% wt</span>
+                    )}
+                  </>
+                )}
+              </div>
+            </div>
+
+            <div className={styles.summaryItem}>
+              <div className={styles.summaryHeader}>
+                <span className={styles.summaryLabel}>Coverage</span>
+              </div>
+              <div className={styles.summaryValueRow}>
+                {showInitialSkeleton ? (
+                  <span className={styles.summarySkeleton} aria-hidden="true" />
+                ) : (
+                  <>
+                    <span className={styles.summaryValue}>{stockHoldings.length || "--"}</span>
+                    <span className={styles.summarySub}>assets · {currencyHoldings.length} FX</span>
+                  </>
+                )}
+              </div>
             </div>
           </div>
 
           <div className={styles.tabsBar}>
             <div className={styles.navTabs} role="tablist" aria-label="Portfolio views">
-              {tabs.map((tab) => (
+              {tabs.map((tab, index) => (
                 <button
                   type="button"
                   key={tab.id}
+                  ref={(node) => { tabRefs.current[index] = node; }}
                   role="tab"
                   aria-selected={activeTab === tab.id}
+                  tabIndex={activeTab === tab.id ? 0 : -1}
                   className={`${styles.tabButton} ${activeTab === tab.id ? styles.tabButtonActive : ""}`}
                   onClick={() => setActiveTab(tab.id)}
+                  onKeyDown={(event) => handleTabKeyDown(event, index)}
                 >
                   <TabIcon type={tab.icon} />
                   {tab.label}

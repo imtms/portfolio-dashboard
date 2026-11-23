@@ -1,32 +1,15 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import * as echarts from "echarts";
+import { echarts } from "../../lib/echarts";
+import { getChartTheme, getMonoFontFamily } from "../../lib/chartTheme";
+import SortHeader from "./TableSortHeader";
 import styles from "../../styles/Dashboard.module.css";
-
-const LIGHT_CHART_PALETTE = ["#2563eb", "#0d9488", "#d97706", "#7c3aed", "#e11d48", "#0284c7"];
-const DARK_CHART_PALETTE = ["#3b82f6", "#14b8a6", "#f59e0b", "#8b5cf6", "#f43f5e", "#38bdf8"];
-
-function SortIcon({ active, order }) {
-  return (
-    <svg className={styles.sortIcon} viewBox="0 0 12 12" fill="none" aria-hidden="true">
-      <path d="m3 5 3-3 3 3M9 7 6 10 3 7" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" opacity={active ? 1 : 0.45} />
-      {active && order === "asc" ? <path d="m3 5 3-3 3 3" stroke="currentColor" strokeWidth="1.5" /> : null}
-      {active && order === "desc" ? <path d="m9 7-3 3-3-3" stroke="currentColor" strokeWidth="1.5" /> : null}
-    </svg>
-  );
-}
-
-function SortHeader({ column, children, numeric = false, sortBy, sortOrder, onSort }) {
-  return (
-    <th className={numeric ? styles.numeric : undefined} aria-sort={sortBy === column ? (sortOrder === "asc" ? "ascending" : "descending") : "none"}>
-      <button type="button" className={styles.sortButton} onClick={() => onSort(column)}>{children}<SortIcon active={sortBy === column} order={sortOrder} /></button>
-    </th>
-  );
-}
 
 function EmptyState() {
   return (
     <div className={styles.emptyState}>
-      <div className={styles.emptyIcon} aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="8" stroke="currentColor" strokeWidth="1.6" /><path d="M15 9.5h-5a2 2 0 0 0 0 4h4a2 2 0 0 1 0 4H9M12 7v2.5M12 17.5V20" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" /></svg></div>
+      <div className={styles.emptyIcon} aria-hidden="true">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="8" stroke="currentColor" strokeWidth="1.6" /><path d="M15 9.5h-5a2 2 0 0 0 0 4h4a2 2 0 0 1 0 4H9M12 7v2.5M12 17.5V20" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" /></svg>
+      </div>
       <p className={styles.emptyTitle}>No currency exposure</p>
       <span className={styles.emptyDescription}>Currency weights will appear when holdings data is available.</span>
     </div>
@@ -40,28 +23,16 @@ export default function CurrencyHoldings({ holdings, darkMode }) {
   const [sortOrder, setSortOrder] = useState("desc");
   const [activeCurrency, setActiveCurrency] = useState(null);
 
-  const chartColors = darkMode ? DARK_CHART_PALETTE : LIGHT_CHART_PALETTE;
-
-  const palette = useMemo(() => {
-    void darkMode;
-    if (typeof window === "undefined") return {};
-    const computed = getComputedStyle(document.documentElement);
-    return {
-      foreground: computed.getPropertyValue("--foreground").trim(),
-      muted: computed.getPropertyValue("--muted-foreground").trim(),
-      tooltip: computed.getPropertyValue("--chart-tooltip").trim(),
-      border: computed.getPropertyValue("--border-strong").trim(),
-      surface: computed.getPropertyValue("--surface-raised").trim(),
-    };
-  }, [darkMode]);
+  const hasHoldings = holdings.length > 0;
+  const theme = useMemo(() => getChartTheme(darkMode), [darkMode]);
 
   const chartData = useMemo(() => [...holdings]
     .sort((a, b) => b.percentage - a.percentage)
     .map((holding, index) => ({
       value: Number(holding.percentage.toFixed(2)),
       name: holding.currency,
-      itemStyle: { color: chartColors[index % chartColors.length] },
-    })), [holdings, chartColors]);
+      itemStyle: { color: theme.series[index % theme.series.length] },
+    })), [holdings, theme]);
 
   const indexByCurrency = useMemo(() => {
     const map = new Map();
@@ -69,53 +40,62 @@ export default function CurrencyHoldings({ holdings, darkMode }) {
     return map;
   }, [chartData]);
 
-  const option = useMemo(() => ({
-    animationDuration: 420,
-    tooltip: {
-      trigger: "item",
-      backgroundColor: palette.tooltip,
-      borderColor: palette.border,
-      borderWidth: 1,
-      borderRadius: 2,
-      padding: [8, 12],
-      textStyle: { color: palette.foreground, fontFamily: "JetBrains Mono, SFMono-Regular, Consolas, monospace", fontSize: 12 },
-      formatter: ({ name, value }) => `<strong>${name}</strong><br/><span style="color:${palette.muted}">${Number(value).toFixed(2)}% exposure</span>`,
-    },
-    title: {
-      text: `${holdings.length}`,
-      subtext: "CURRENCIES",
-      left: "center",
-      top: "41%",
-      textStyle: { color: palette.foreground, fontFamily: "JetBrains Mono, SFMono-Regular, Consolas, monospace", fontSize: 22, fontWeight: 600 },
-      subtextStyle: { color: palette.muted, fontFamily: "JetBrains Mono, SFMono-Regular, Consolas, monospace", fontSize: 9 },
-    },
-    series: [{
-      name: "Currency allocation",
-      type: "pie",
-      radius: ["58%", "77%"],
-      center: ["50%", "50%"],
-      minAngle: 2,
-      padAngle: 1,
-      itemStyle: { borderRadius: 1, borderColor: palette.surface, borderWidth: 1.5 },
-      label: { show: false },
-      labelLine: { show: false },
-      emphasis: { scaleSize: 4 },
-      data: chartData,
-    }],
-  }), [chartData, holdings.length, palette]);
+  const option = useMemo(() => {
+    const monoFont = getMonoFontFamily();
+    return {
+      animationDuration: 360,
+      animationDurationUpdate: 260,
+      tooltip: {
+        trigger: "item",
+        backgroundColor: theme.tooltip,
+        borderColor: theme.border,
+        borderWidth: 1,
+        borderRadius: 3,
+        padding: [8, 12],
+        textStyle: { color: theme.foreground, fontFamily: monoFont, fontSize: 12 },
+        formatter: ({ name, value }) => `<strong>${name}</strong><br/><span style="color:${theme.muted}">${Number(value).toFixed(2)}% exposure</span>`,
+      },
+      title: {
+        text: `${holdings.length}`,
+        subtext: "CURRENCIES",
+        left: "center",
+        top: "40%",
+        textStyle: { color: theme.foreground, fontFamily: monoFont, fontSize: 22, fontWeight: 600 },
+        subtextStyle: { color: theme.subtle, fontFamily: monoFont, fontSize: 9.5, fontWeight: 600 },
+      },
+      series: [{
+        name: "Currency allocation",
+        type: "pie",
+        radius: ["58%", "78%"],
+        center: ["50%", "50%"],
+        minAngle: 2,
+        padAngle: 1.5,
+        itemStyle: { borderRadius: 2, borderColor: theme.surface, borderWidth: 1.5 },
+        label: { show: false },
+        labelLine: { show: false },
+        emphasis: { scaleSize: 4 },
+        data: chartData,
+      }],
+    };
+  }, [chartData, holdings.length, theme]);
 
   useEffect(() => {
-    if (!chartRef.current || !holdings.length) return undefined;
-    chartInstance.current = echarts.init(chartRef.current);
-    chartInstance.current.setOption(option);
-    const observer = new ResizeObserver(() => chartInstance.current?.resize());
+    if (!chartRef.current || !hasHoldings) return undefined;
+    const instance = echarts.init(chartRef.current);
+    chartInstance.current = instance;
+    const observer = new ResizeObserver(() => instance.resize());
     observer.observe(chartRef.current);
     return () => {
       observer.disconnect();
-      chartInstance.current?.dispose();
+      instance.dispose();
       chartInstance.current = null;
     };
-  }, [holdings.length, option]);
+  }, [hasHoldings]);
+
+  useEffect(() => {
+    if (!chartInstance.current || !hasHoldings) return;
+    chartInstance.current.setOption(option, { notMerge: true });
+  }, [option, hasHoldings]);
 
   const highlightSlice = useCallback((currency) => {
     setActiveCurrency(currency);
@@ -143,14 +123,14 @@ export default function CurrencyHoldings({ holdings, darkMode }) {
   }), [holdings, sortBy, sortOrder]);
 
   const handleSort = (column) => {
-    if (sortBy === column) setSortOrder((order) => order === "asc" ? "desc" : "asc");
+    if (sortBy === column) setSortOrder((order) => (order === "asc" ? "desc" : "asc"));
     else {
       setSortBy(column);
       setSortOrder("desc");
     }
   };
 
-  if (!holdings.length) return <EmptyState />;
+  if (!hasHoldings) return <EmptyState />;
 
   return (
     <div>
@@ -169,14 +149,17 @@ export default function CurrencyHoldings({ holdings, darkMode }) {
           </div>
           <div ref={chartRef} className={styles.donutContainer} />
           <div className={styles.chartLegend}>
-            {chartData.map((item, index) => (
+            {chartData.map((item) => (
               <div
                 className={`${styles.legendItem} ${activeCurrency === item.name ? styles.legendItemActive : ""}`}
                 key={item.name}
                 onMouseEnter={() => highlightSlice(item.name)}
                 onMouseLeave={() => clearHighlight(item.name)}
               >
-                <span className={styles.legendName}><span className={styles.legendDot} style={{ background: chartColors[index % chartColors.length] }} /><span className={styles.legendText}>{item.name}</span></span>
+                <span className={styles.legendName}>
+                  <span className={styles.legendDot} style={{ background: item.itemStyle.color }} />
+                  <span className={styles.legendText}>{item.name}</span>
+                </span>
                 <span className={styles.legendValue}>{item.value.toFixed(2)}%</span>
               </div>
             ))}
@@ -189,14 +172,20 @@ export default function CurrencyHoldings({ holdings, darkMode }) {
             <span className={styles.sectionMeta}>Sortable</span>
           </div>
           <div className={styles.tableContainer}>
-            <table className={styles.customTable}>
-              <thead><tr><SortHeader column="currency" sortBy={sortBy} sortOrder={sortOrder} onSort={handleSort}>Currency</SortHeader><SortHeader column="percentage" numeric sortBy={sortBy} sortOrder={sortOrder} onSort={handleSort}>Weight</SortHeader></tr></thead>
+            <table className={`${styles.customTable} ${styles.compactTable}`}>
+              <thead>
+                <tr>
+                  <SortHeader column="currency" sortBy={sortBy} sortOrder={sortOrder} onSort={handleSort}>Currency</SortHeader>
+                  <SortHeader column="percentage" numeric sortBy={sortBy} sortOrder={sortOrder} onSort={handleSort}>Weight</SortHeader>
+                </tr>
+              </thead>
               <tbody>
                 {sortedHoldings.map((holding) => {
-                  const color = indexByCurrency.get(holding.currency)?.color || chartColors[0];
+                  const color = indexByCurrency.get(holding.currency)?.color || theme.series[0];
                   return (
                     <tr
                       key={holding.currency}
+                      className={activeCurrency === holding.currency ? styles.rowActive : undefined}
                       onMouseEnter={() => highlightSlice(holding.currency)}
                       onMouseLeave={() => clearHighlight(holding.currency)}
                     >
@@ -209,9 +198,9 @@ export default function CurrencyHoldings({ holdings, darkMode }) {
                       <td className={`${styles.numeric} ${styles.numberCell}`}>
                         <span className={styles.allocationCell}>
                           <span className={styles.allocationTrack}>
-                            <span className={styles.allocationFill} style={{ width: `${Math.min(100, holding.percentage)}%`, background: color }} />
+                            <span className={styles.allocationFill} style={{ width: `${Math.max(4, Math.min(100, holding.percentage))}%`, background: color }} />
                           </span>
-                          {holding.percentage.toFixed(2)}%
+                          <span className={styles.allocationValue}>{holding.percentage.toFixed(2)}%</span>
                         </span>
                       </td>
                     </tr>

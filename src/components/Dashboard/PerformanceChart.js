@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import * as echarts from "echarts";
+import { echarts } from "../../lib/echarts";
+import { getChartTheme, getMonoFontFamily } from "../../lib/chartTheme";
 import styles from "../../styles/Dashboard.module.css";
 
 const RANGES = [
@@ -61,6 +62,7 @@ export default function PerformanceChart({ data, darkMode }) {
   const [range, setRange] = useState("ALL");
 
   const visibleData = useMemo(() => sliceByRange(data, range), [data, range]);
+  const hasVisibleData = visibleData.length > 0;
 
   const spanDays = useMemo(() => {
     if (data.length < 2) return 0;
@@ -83,95 +85,122 @@ export default function PerformanceChart({ data, darkMode }) {
     };
   }, [visibleData]);
 
-  const palette = useMemo(() => {
-    void darkMode;
-    if (typeof window === "undefined") return {};
-    const computed = getComputedStyle(document.documentElement);
-    return {
-      accent: computed.getPropertyValue("--accent").trim(),
-      foreground: computed.getPropertyValue("--foreground").trim(),
-      muted: computed.getPropertyValue("--muted-foreground").trim(),
-      grid: computed.getPropertyValue("--chart-grid").trim(),
-      tooltip: computed.getPropertyValue("--chart-tooltip").trim(),
-      border: computed.getPropertyValue("--border-strong").trim(),
-    };
-  }, [darkMode]);
+  const theme = useMemo(() => getChartTheme(darkMode), [darkMode]);
 
-  const option = useMemo(() => ({
-    animationDuration: 420,
-    animationEasing: "cubicOut",
-    tooltip: {
-      trigger: "axis",
-      backgroundColor: palette.tooltip,
-      borderColor: palette.border,
-      borderWidth: 1,
-      borderRadius: 2,
-      padding: [8, 12],
-      textStyle: { color: palette.foreground, fontFamily: "JetBrains Mono, SFMono-Regular, Consolas, monospace", fontSize: 12 },
-      formatter: (params) => {
-        const point = params[0];
-        const value = Number(point.value);
-        return `<span style="color:${palette.muted};font-size:10.5px">${point.axisValue}</span><br/><strong style="font-size:13px">${value >= 0 ? "+" : ""}${value.toFixed(2)}%</strong>`;
+  const option = useMemo(() => {
+    const monoFont = getMonoFontFamily();
+    return {
+      animationDuration: 360,
+      animationDurationUpdate: 260,
+      animationEasing: "cubicOut",
+      tooltip: {
+        trigger: "axis",
+        backgroundColor: theme.tooltip,
+        borderColor: theme.border,
+        borderWidth: 1,
+        borderRadius: 3,
+        padding: [8, 12],
+        textStyle: { color: theme.foreground, fontFamily: monoFont, fontSize: 12 },
+        formatter: (params) => {
+          const point = params[0];
+          const value = Number(point.value);
+          const color = value >= 0 ? theme.positive : theme.negative;
+          return `<span style="color:${theme.subtle};font-size:10.5px">${point.axisValue}</span><br/><strong style="font-size:13px;color:${color}">${value >= 0 ? "+" : ""}${value.toFixed(2)}%</strong>`;
+        },
+        axisPointer: { type: "line", lineStyle: { color: theme.border, type: "solid", width: 1 } },
       },
-      axisPointer: { type: "line", lineStyle: { color: palette.border, type: "solid", width: 1 } },
-    },
-    grid: { left: 16, right: 24, top: 24, bottom: 14, containLabel: true },
-    xAxis: {
-      type: "category",
-      boundaryGap: false,
-      data: visibleData.map((item) => item.date),
-      axisTick: { show: false },
-      axisLabel: { color: palette.muted, fontFamily: "JetBrains Mono, SFMono-Regular, Consolas, monospace", fontSize: 10, hideOverlap: true, margin: 14 },
-      axisLine: { lineStyle: { color: palette.grid } },
-    },
-    yAxis: {
-      type: "value",
-      scale: true,
-      axisLabel: { formatter: (value) => `${value}%`, color: palette.muted, fontFamily: "JetBrains Mono, SFMono-Regular, Consolas, monospace", fontSize: 10 },
-      axisLine: { show: false },
-      axisTick: { show: false },
-      splitNumber: 5,
-      splitLine: { lineStyle: { color: palette.grid, type: "solid" } },
-    },
-    series: [{
-      data: visibleData.map((item) => Number(item.netPerformanceInPercentage.toFixed(2))),
-      type: "line",
-      smooth: 0.12,
-      showSymbol: false,
-      symbolSize: 6,
-      lineStyle: { color: palette.accent, width: 1.8 },
-      itemStyle: { color: palette.accent, borderColor: palette.tooltip, borderWidth: 2 },
-      emphasis: { focus: "series", scale: true },
-      markLine: {
-        silent: true,
-        symbol: "none",
-        lineStyle: { color: palette.border, type: "dashed", width: 1 },
-        label: { show: false },
-        data: [{ yAxis: 0 }],
+      grid: { left: 16, right: 24, top: 24, bottom: 14, containLabel: true },
+      xAxis: {
+        type: "category",
+        boundaryGap: false,
+        data: visibleData.map((item) => item.date),
+        axisTick: { show: false },
+        axisLabel: {
+          color: theme.muted,
+          fontFamily: monoFont,
+          fontSize: 10.5,
+          hideOverlap: true,
+          alignMinLabel: "left",
+          alignMaxLabel: "right",
+          margin: 14,
+        },
+        axisLine: { lineStyle: { color: theme.grid } },
       },
-      areaStyle: {
-        color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-          { offset: 0, color: darkMode ? "rgba(59, 130, 246, 0.22)" : "rgba(29, 78, 216, 0.14)" },
-          { offset: 1, color: darkMode ? "rgba(59, 130, 246, 0.00)" : "rgba(29, 78, 216, 0.00)" },
-        ]),
+      yAxis: {
+        type: "value",
+        scale: true,
+        axisLabel: { formatter: (value) => `${value}%`, color: theme.muted, fontFamily: monoFont, fontSize: 10.5 },
+        axisLine: { show: false },
+        axisTick: { show: false },
+        splitNumber: 5,
+        splitLine: { lineStyle: { color: theme.grid, type: "solid" } },
       },
-    }],
-  }), [visibleData, darkMode, palette]);
+      series: [{
+        data: visibleData.map((item) => Number(item.netPerformanceInPercentage.toFixed(2))),
+        type: "line",
+        smooth: 0.12,
+        showSymbol: false,
+        symbolSize: 6,
+        lineStyle: { color: theme.accent, width: 2 },
+        itemStyle: { color: theme.accent, borderColor: theme.tooltip, borderWidth: 2 },
+        emphasis: { focus: "series", scale: true },
+        markLine: {
+          silent: true,
+          symbol: "none",
+          lineStyle: { color: theme.border, type: "dashed", width: 1 },
+          label: {
+            show: true,
+            position: "insideEndTop",
+            formatter: "0%",
+            color: theme.subtle,
+            fontFamily: monoFont,
+            fontSize: 10,
+            distance: 4,
+          },
+          data: [{ yAxis: 0 }],
+        },
+        areaStyle: {
+          color: {
+            type: "linear",
+            x: 0,
+            y: 0,
+            x2: 0,
+            y2: 1,
+            colorStops: [
+              { offset: 0, color: theme.areaTop },
+              { offset: 1, color: theme.areaBottom },
+            ],
+          },
+        },
+      }],
+    };
+  }, [visibleData, theme]);
 
   useEffect(() => {
-    if (!chartRef.current || !visibleData.length) return undefined;
-    chartInstance.current = echarts.init(chartRef.current);
-    chartInstance.current.setOption(option);
-    const observer = new ResizeObserver(() => chartInstance.current?.resize());
+    if (!chartRef.current || !hasVisibleData) return undefined;
+    const instance = echarts.init(chartRef.current);
+    chartInstance.current = instance;
+    const observer = new ResizeObserver(() => instance.resize());
     observer.observe(chartRef.current);
     return () => {
       observer.disconnect();
-      chartInstance.current?.dispose();
+      instance.dispose();
       chartInstance.current = null;
     };
-  }, [visibleData.length, option]);
+  }, [hasVisibleData]);
+
+  useEffect(() => {
+    if (!chartInstance.current || !hasVisibleData) return;
+    chartInstance.current.setOption(option, { notMerge: true });
+  }, [option, hasVisibleData]);
 
   if (!data.length) return <EmptyState />;
+
+  const deltaClass = !Number.isFinite(stats.delta)
+    ? ""
+    : stats.delta >= 0
+      ? styles.positive
+      : styles.negative;
 
   return (
     <div>
@@ -218,7 +247,7 @@ export default function PerformanceChart({ data, darkMode }) {
           </div>
           <div className={styles.chartStatItem}>
             <span className={styles.panelLabel}>Range delta</span>
-            <span className={`${styles.chartStatValue} ${stats.delta >= 0 ? styles.positive : styles.negative}`}>
+            <span className={`${styles.chartStatValue} ${deltaClass}`}>
               {formatPct(stats.delta)}
             </span>
           </div>

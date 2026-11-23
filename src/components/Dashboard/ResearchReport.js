@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import report from "../../content/portfolioReport";
@@ -6,6 +6,8 @@ import { extractMarkdownHeadings, extractTextFromNode, slugifyHeading } from "..
 import styles from "../../styles/Dashboard.module.css";
 
 export default function ResearchReport() {
+  const [activeId, setActiveId] = useState("");
+  const mobileTocRef = useRef(null);
   const headings = useMemo(() => extractMarkdownHeadings(report, { minLevel: 2, maxLevel: 2 }), []);
 
   const markdownComponents = useMemo(() => {
@@ -22,6 +24,29 @@ export default function ResearchReport() {
     };
   }, [headings]);
 
+  useEffect(() => {
+    if (!headings.length || typeof IntersectionObserver === "undefined") return undefined;
+    const elements = headings.map((h) => document.getElementById(h.id)).filter(Boolean);
+    if (!elements.length) return undefined;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visible = entries.filter((entry) => entry.isIntersecting);
+        if (visible.length > 0) {
+          setActiveId(visible[0].target.id);
+        }
+      },
+      { rootMargin: "-88px 0px -70% 0px", threshold: 0 }
+    );
+
+    elements.forEach((el) => observer.observe(el));
+    return () => observer.disconnect();
+  }, [headings]);
+
+  const closeMobileToc = () => {
+    if (mobileTocRef.current) mobileTocRef.current.open = false;
+  };
+
   return (
     <article className={styles.researchReport}>
       <header className={styles.researchHeader}>
@@ -37,12 +62,14 @@ export default function ResearchReport() {
       </header>
 
       {headings.length > 0 && (
-        <details className={styles.mobileToc}>
+        <details ref={mobileTocRef} className={styles.mobileToc}>
           <summary>Jump to section ({headings.length})</summary>
           <ul className={styles.mobileTocList}>
             {headings.map((item) => (
               <li key={item.id}>
-                <a className={styles.tocLink} href={`#${item.id}`}>{item.text}</a>
+                <a className={styles.tocLink} href={`#${item.id}`} onClick={closeMobileToc}>
+                  {item.text}
+                </a>
               </li>
             ))}
           </ul>
@@ -60,7 +87,12 @@ export default function ResearchReport() {
             <ul className={styles.tocList}>
               {headings.map((item) => (
                 <li key={item.id}>
-                  <a className={styles.tocLink} href={`#${item.id}`}>{item.text}</a>
+                  <a
+                    className={`${styles.tocLink} ${activeId === item.id ? styles.tocLinkActive : ""}`}
+                    href={`#${item.id}`}
+                  >
+                    {item.text}
+                  </a>
                 </li>
               ))}
             </ul>

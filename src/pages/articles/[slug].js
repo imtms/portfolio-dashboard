@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -49,6 +49,7 @@ function ReadingProgress({ slug }) {
 
 export default function Article({ article }) {
   const [activeId, setActiveId] = useState("");
+  const mobileTocRef = useRef(null);
 
   const headings = useMemo(() => extractMarkdownHeadings(article.content, { minLevel: 2, maxLevel: 3 }), [article.content]);
 
@@ -149,7 +150,7 @@ export default function Article({ article }) {
               </header>
 
               {hasToc && (
-                <details className={styles.mobileToc}>
+                <details ref={mobileTocRef} className={styles.mobileToc}>
                   <summary>文章目录 ({headings.length})</summary>
                   <ul className={styles.mobileTocList}>
                     {headings.map((item) => (
@@ -157,6 +158,9 @@ export default function Article({ article }) {
                         <a
                           href={`#${item.id}`}
                           className={`${styles.tocLink} ${item.level === 3 ? styles.tocLinkSub : ""}`}
+                          onClick={() => {
+                            if (mobileTocRef.current) mobileTocRef.current.open = false;
+                          }}
                         >
                           {item.text}
                         </a>
