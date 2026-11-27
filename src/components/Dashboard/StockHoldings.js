@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
 import { echarts } from "../../lib/echarts";
 import { getChartTheme, getMonoFontFamily } from "../../lib/chartTheme";
 import SortHeader from "./TableSortHeader";
@@ -7,6 +7,14 @@ import styles from "../../styles/Dashboard.module.css";
 const MAX_NAMED_SLICES = 7;
 const OTHER_SLICE_KEY = "__OTHER__";
 const analysisBaseUrl = "https://xh.tms.im";
+const collator = new Intl.Collator(undefined, { numeric: true, sensitivity: "base" });
+
+const COLUMN_LABELS = {
+  symbol: "Symbol",
+  name: "Instrument",
+  netPerformancePercent: "Return",
+  allocationInPercentage: "Weight",
+};
 
 function getAnalysisUrl(symbol) {
   return `${analysisBaseUrl}/${encodeURIComponent(symbol.trim())}`;
@@ -27,8 +35,11 @@ function EmptyState() {
 export default function StockHoldings({ holdings, darkMode }) {
   const chartRef = useRef(null);
   const chartInstance = useRef(null);
+  const filterId = useId();
+  const captionId = useId();
   const [sortBy, setSortBy] = useState("allocationInPercentage");
   const [sortOrder, setSortOrder] = useState("desc");
+  const [sortAnnouncement, setSortAnnouncement] = useState("");
   const [query, setQuery] = useState("");
   const [activeSliceKey, setActiveSliceKey] = useState(null);
   const [activeRowSymbol, setActiveRowSymbol] = useState(null);
@@ -37,7 +48,7 @@ export default function StockHoldings({ holdings, darkMode }) {
   const theme = useMemo(() => getChartTheme(darkMode), [darkMode]);
 
   const { chartData, sliceLookup, otherCount, maxAllocation } = useMemo(() => {
-    const sorted = [...holdings].sort((a, b) => b.allocationInPercentage - a.allocationInPercentage);
+    const sorted = holdings.toSorted((a, b) => b.allocationInPercentage - a.allocationInPercentage);
     const maxWeight = sorted[0]?.allocationInPercentage || 0;
     const shouldGroup = sorted.length > MAX_NAMED_SLICES + 1;
     const primary = shouldGroup ? sorted.slice(0, MAX_NAMED_SLICES) : sorted;
@@ -105,7 +116,9 @@ export default function StockHoldings({ holdings, darkMode }) {
 
   const option = useMemo(() => {
     const monoFont = getMonoFontFamily();
+    const reduceMotion = typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     return {
+      animation: !reduceMotion,
       animationDuration: 360,
       animationDurationUpdate: 260,
       tooltip: {
@@ -207,20 +220,26 @@ export default function StockHoldings({ holdings, darkMode }) {
       ? holdings.filter((h) => h.symbol.toLowerCase().includes(normalizedQuery) || h.name.toLowerCase().includes(normalizedQuery))
       : holdings;
 
-    return [...list].sort((a, b) => {
-      const valA = typeof a[sortBy] === "string" ? a[sortBy].toUpperCase() : a[sortBy];
-      const valB = typeof b[sortBy] === "string" ? b[sortBy].toUpperCase() : b[sortBy];
-      if (valA === valB) return 0;
-      return (valA < valB ? -1 : 1) * (sortOrder === "asc" ? 1 : -1);
+    const factor = sortOrder === "asc" ? 1 : -1;
+    return list.toSorted((a, b) => {
+      const valA = a[sortBy];
+      const valB = b[sortBy];
+      if (typeof valA === "string" || typeof valB === "string") {
+        return factor * collator.compare(String(valA ?? ""), String(valB ?? ""));
+      }
+      return factor * (Number(valA) - Number(valB));
     });
   }, [holdings, query, sortBy, sortOrder]);
 
   const handleSort = (column) => {
-    if (sortBy === column) setSortOrder((order) => (order === "asc" ? "desc" : "asc"));
-    else {
-      setSortBy(column);
-      setSortOrder("desc");
-    }
+    const nextOrder = sortBy === column
+      ? (sortOrder === "asc" ? "desc" : "asc")
+      : (column === "symbol" || column === "name" ? "asc" : "desc");
+    setSortBy(column);
+    setSortOrder(nextOrder);
+    const label = COLUMN_LABELS[column] || column;
+    const direction = nextOrder === "asc" ? "ascending" : "descending";
+    setSortAnnouncement(`Sorted by ${label}, ${direction}, ${filteredAndSortedHoldings.length} rows`);
   };
 
   if (!hasHoldings) return <EmptyState />;
@@ -233,16 +252,17 @@ export default function StockHoldings({ holdings, darkMode }) {
           <p className={styles.panelDescription}>Relative position sizing and instrument-level performance.</p>
         </div>
         <div className={styles.searchWrap}>
+          <label htmlFor={filterId} className="visually-hidden">Filter asset holdings</label>
           <svg className={styles.searchIcon} viewBox="0 0 24 24" fill="none" aria-hidden="true">
             <circle cx="11" cy="11" r="7" stroke="currentColor" strokeWidth="1.8" />
             <path d="m20 20-3.5-3.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
           </svg>
           <input
+            id={filterId}
             type="search"
             value={query}
             onChange={(event) => setQuery(event.target.value)}
             placeholder="Filter symbol or name..."
-            aria-label="Filter asset holdings"
             className={styles.searchInput}
           />
           {query && (
@@ -254,7 +274,7 @@ export default function StockHoldings({ holdings, darkMode }) {
       </div>
 
       <div className={styles.holdingsLayout}>
-        <section className={styles.allocationPanel}>
+        <section className={styles.allocationPanel} aria-label="Weight breakdown">
           <div className={styles.subPanelHeader}>
             <h3 className={styles.subPanelTitle}>Weight breakdown</h3>
             <span className={styles.sectionMeta}>
@@ -262,7 +282,7 @@ export default function StockHoldings({ holdings, darkMode }) {
             </span>
           </div>
           <div className={styles.donutStage}>
-            <div ref={chartRef} className={styles.donutContainer} />
+            <div ref={chartRef} className={styles.donutContainer} aria-hidden="true" />
             <div className={styles.donutCenter} aria-hidden="true">
               <strong className={styles.donutCenterValue}>{activeCenter.primary}</strong>
               <span className={styles.donutCenterLabel}>
@@ -273,18 +293,21 @@ export default function StockHoldings({ holdings, darkMode }) {
           </div>
           <div className={styles.chartLegend}>
             {chartData.map((item) => (
-              <div
+              <button
+                type="button"
                 className={`${styles.legendItem} ${activeSliceKey === item.key ? styles.legendItemActive : ""}`}
                 key={item.key}
                 onMouseEnter={() => highlightSlice(item.key)}
                 onMouseLeave={() => clearHighlight(item.key)}
+                onFocus={() => highlightSlice(item.key)}
+                onBlur={() => clearHighlight(item.key)}
               >
                 <span className={styles.legendName}>
-                  <span className={styles.legendDot} style={{ background: item.itemStyle.color }} />
+                  <span className={styles.legendDot} style={{ background: item.itemStyle.color }} aria-hidden="true" />
                   <span className={styles.legendText}>{item.name}</span>
                 </span>
                 <span className={styles.legendValue}>{item.value.toFixed(2)}%</span>
-              </div>
+              </button>
             ))}
           </div>
         </section>
@@ -297,9 +320,12 @@ export default function StockHoldings({ holdings, darkMode }) {
             <span className={styles.sectionMeta}>Relative bars · Sortable</span>
           </div>
 
-          <div className={styles.tableContainer}>
+          <div role="status" className="visually-hidden">{sortAnnouncement}</div>
+
+          <div className={styles.tableContainer} tabIndex={0} role="region" aria-labelledby={captionId}>
             {filteredAndSortedHoldings.length > 0 ? (
               <table className={styles.customTable}>
+                <caption id={captionId} className="visually-hidden">Equity holdings allocation and return</caption>
                 <thead>
                   <tr>
                     <SortHeader column="symbol" sortBy={sortBy} sortOrder={sortOrder} onSort={handleSort}>Symbol</SortHeader>
@@ -328,7 +354,7 @@ export default function StockHoldings({ holdings, darkMode }) {
                         onMouseEnter={() => highlightSlice(holding.symbol, true)}
                         onMouseLeave={() => clearHighlight(holding.symbol)}
                       >
-                        <td className={styles.symbolCell}>
+                        <th scope="row" className={styles.symbolCell}>
                           <span className={styles.symbolWithDot}>
                             <span className={styles.currencyDot} style={{ background: dotColor }} aria-hidden="true" />
                             <a
@@ -336,13 +362,13 @@ export default function StockHoldings({ holdings, darkMode }) {
                               href={getAnalysisUrl(holding.symbol)}
                               target="_blank"
                               rel="noopener noreferrer"
-                              aria-label={`Analyze ${holding.symbol} on Xiheng`}
+                              aria-label={`${holding.symbol} — Analyze on Xiheng`}
                             >
                               {holding.symbol}
                               <span className={styles.symbolArrow} aria-hidden="true">↗</span>
                             </a>
                           </span>
-                        </td>
+                        </th>
                         <td className={styles.nameCell} title={holding.name}>{holding.name}</td>
                         <td className={`${styles.numeric} ${styles.numberCell}`}>
                           <span className={`${styles.returnPill} ${isPositive ? styles.returnPillPositive : styles.returnPillNegative}`}>
@@ -351,7 +377,7 @@ export default function StockHoldings({ holdings, darkMode }) {
                         </td>
                         <td className={`${styles.numeric} ${styles.numberCell}`}>
                           <span className={styles.allocationCell}>
-                            <span className={styles.allocationTrack}>
+                            <span className={styles.allocationTrack} aria-hidden="true">
                               <span className={styles.allocationFill} style={{ width: `${relativeWidth}%`, background: barColor }} />
                             </span>
                             <span className={styles.allocationValue}>{(holding.allocationInPercentage * 100).toFixed(2)}%</span>

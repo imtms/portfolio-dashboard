@@ -2,13 +2,9 @@ import styles from "../../styles/Dashboard.module.css";
 
 export default function LoadingSpinner() {
   return (
-    <div className={styles.loadingContainer} role="status" aria-live="polite">
-      <div className={styles.loadingBars} aria-hidden="true">
-        <span />
-        <span />
-        <span />
-      </div>
-      <span className={styles.loadingLabel}>Syncing portfolio data</span>
+    <div className={styles.loadingContainer}>
+      <progress className={styles.loadingSpinner} aria-label="Syncing portfolio data" />
+      <span className={styles.loadingLabel} aria-hidden="true">Syncing portfolio data</span>
     </div>
   );
 }

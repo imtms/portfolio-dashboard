@@ -1,5 +1,14 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
+const REQUEST_TIMEOUT_MS = 25_000;
+
+function createRequestSignal(controller) {
+  if (typeof AbortSignal !== "undefined" && typeof AbortSignal.any === "function" && typeof AbortSignal.timeout === "function") {
+    return AbortSignal.any([controller.signal, AbortSignal.timeout(REQUEST_TIMEOUT_MS)]);
+  }
+  return controller.signal;
+}
+
 export function usePortfolioData() {
   const [data, setData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -33,9 +42,12 @@ export function usePortfolioData() {
       const response = await fetch(`/api/data${query}`, {
         method: refresh ? "POST" : "GET",
         cache: "no-store",
-        signal: controller.signal,
+        signal: createRequestSignal(controller),
+        ...(background ? { priority: "low" } : {}),
       });
-      if (!response.ok) throw new Error("Unable to update portfolio data. Please try again.");
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: Unable to update portfolio data.`);
+      }
       const next = await response.json();
       if (currentRequestId !== requestId.current) return;
       setData(next);
@@ -43,8 +55,12 @@ export function usePortfolioData() {
       try {
         localStorage.setItem("selectedAccountIds", JSON.stringify(selection.current));
       } catch { /* Storage may be unavailable in private browsing. */ }
-    } catch (error) {
-      if (error.name !== "AbortError" && currentRequestId === requestId.current) {
+    } catch (err) {
+      if (currentRequestId !== requestId.current) return;
+      if (err?.name === "AbortError" && controller.signal.aborted) return;
+      if (err?.name === "TimeoutError") {
+        setError("Portfolio data request timed out. Please try again.");
+      } else {
         setError("Unable to update portfolio data. Please try again.");
       }
     } finally {

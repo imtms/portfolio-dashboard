@@ -14,14 +14,24 @@ function formatDate(date) {
 }
 
 function ReadingProgress({ slug }) {
-  const [progress, setProgress] = useState(0);
+  const fillRef = useRef(null);
 
   useEffect(() => {
+    // Prefer native CSS Scroll-Driven Animations (animation-timeline: scroll()) when supported
+    if (typeof CSS !== "undefined" && CSS.supports("animation-timeline", "scroll()")) {
+      return undefined;
+    }
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      return undefined;
+    }
+
     let frameId = null;
     const updateProgress = () => {
+      const node = fillRef.current;
+      if (!node) return;
       const scrollable = document.documentElement.scrollHeight - window.innerHeight;
-      const next = scrollable <= 0 ? 0 : Math.min(100, Math.max(0, (window.scrollY / scrollable) * 100));
-      setProgress(next);
+      const ratio = scrollable <= 0 ? 0 : Math.min(1, Math.max(0, window.scrollY / scrollable));
+      node.style.transform = `scaleX(${ratio})`;
     };
     const scheduleUpdate = () => {
       if (frameId !== null) return;
@@ -30,6 +40,7 @@ function ReadingProgress({ slug }) {
         updateProgress();
       });
     };
+
     scheduleUpdate();
     window.addEventListener("scroll", scheduleUpdate, { passive: true });
     window.addEventListener("resize", scheduleUpdate);
@@ -42,7 +53,7 @@ function ReadingProgress({ slug }) {
 
   return (
     <div className={styles.progressTrack} aria-hidden="true">
-      <div className={styles.progressFill} style={{ width: `${progress}%` }} />
+      <div ref={fillRef} className={styles.progressFill} />
     </div>
   );
 }
@@ -63,8 +74,13 @@ export default function Article({ article }) {
       return idByText.get(text) || slugifyHeading(text);
     };
     return {
-      h2: ({ children, ...props }) => <h2 id={resolveId(children)} {...props}>{children}</h2>,
-      h3: ({ children, ...props }) => <h3 id={resolveId(children)} {...props}>{children}</h3>,
+      h2: ({ children, ...props }) => <h2 id={resolveId(children)} tabIndex={-1} {...props}>{children}</h2>,
+      h3: ({ children, ...props }) => <h3 id={resolveId(children)} tabIndex={-1} {...props}>{children}</h3>,
+      table: ({ children, ...props }) => (
+        <div className={styles.tableScroll} tabIndex={0} role="region" aria-label="数据表格">
+          <table {...props}>{children}</table>
+        </div>
+      ),
     };
   }, [headings]);
 
@@ -140,7 +156,7 @@ export default function Article({ article }) {
                     </>
                   )}
                 </div>
-                <h1>{article.title}</h1>
+                <h1 id="main-content" tabIndex={-1}>{article.title}</h1>
                 <p>{article.summary}</p>
                 {article.tags.length > 0 && (
                   <div className={styles.tags}>
@@ -187,21 +203,22 @@ export default function Article({ article }) {
           </div>
 
           {hasToc && (
-            <aside className={styles.articleToc} aria-label="文章目录">
+            <nav className={styles.articleToc} aria-label="文章目录">
               <p className={styles.tocTitle}>目录导航</p>
               <ul className={styles.tocList}>
                 {headings.map((item) => (
                   <li key={item.id}>
                     <a
                       href={`#${item.id}`}
-                      className={`${styles.tocLink} ${item.level === 3 ? styles.tocLinkSub : ""} ${activeId === item.id ? styles.tocLinkActive : ""}`}
+                      aria-current={activeId === item.id ? "true" : undefined}
+                      className={`${styles.tocLink} ${item.level === 3 ? styles.tocLinkSub : ""}`}
                     >
                       {item.text}
                     </a>
                   </li>
                 ))}
               </ul>
-            </aside>
+            </nav>
           )}
         </div>
       </main>

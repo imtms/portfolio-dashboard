@@ -10,20 +10,38 @@ function notifyListeners() {
   listeners.forEach((listener) => listener());
 }
 
+function getStoredTheme() {
+  try {
+    const stored = window.localStorage.getItem(STORAGE_KEY);
+    return stored === "dark" || stored === "light" ? stored : null;
+  } catch {
+    return null;
+  }
+}
+
+function getSystemDark() {
+  if (typeof window === "undefined") return false;
+  return window.matchMedia("(prefers-color-scheme: dark)").matches;
+}
+
 function readClientTheme() {
   if (typeof window === "undefined") return false;
   const domTheme = document.documentElement.dataset.theme;
   if (domTheme === "dark" || domTheme === "light") return domTheme === "dark";
-  try {
-    const stored = window.localStorage.getItem(STORAGE_KEY);
-    if (stored === "dark" || stored === "light") return stored === "dark";
-  } catch { /* ignore storage errors */ }
-  return window.matchMedia("(prefers-color-scheme: dark)").matches;
+  const stored = getStoredTheme();
+  if (stored) return stored === "dark";
+  return getSystemDark();
 }
 
-function applyThemeToDom(isDark) {
+function applyThemeToDom(isDark, explicitOverride = getStoredTheme()) {
   if (typeof document === "undefined") return;
   document.documentElement.dataset.theme = isDark ? "dark" : "light";
+
+  const metaColorScheme = document.querySelector('meta[name="color-scheme"]');
+  if (metaColorScheme) {
+    metaColorScheme.setAttribute("content", explicitOverride ?? "light dark");
+  }
+
   const metaTheme = document.querySelector('meta[name="theme-color"]');
   if (metaTheme) {
     metaTheme.setAttribute("content", isDark ? DARK_THEME_COLOR : LIGHT_THEME_COLOR);
@@ -36,18 +54,18 @@ function subscribe(listener) {
 
   const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
   const handleMediaChange = (event) => {
-    let hasStored = false;
-    try {
-      hasStored = Boolean(window.localStorage.getItem(STORAGE_KEY));
-    } catch { /* ignore storage errors */ }
-    if (!hasStored) {
-      applyThemeToDom(event.matches);
+    // Only follow system changes when no explicit override is stored;
+    // never retroactively delete a stored override when the OS happens to match it.
+    if (!getStoredTheme()) {
+      applyThemeToDom(event.matches, null);
       notifyListeners();
     }
   };
   const handleStorageChange = (event) => {
     if (event.key === STORAGE_KEY) {
-      applyThemeToDom(event.newValue === "dark");
+      const stored = event.newValue === "dark" || event.newValue === "light" ? event.newValue : null;
+      const nextDark = stored ? stored === "dark" : getSystemDark();
+      applyThemeToDom(nextDark, stored);
       notifyListeners();
     }
   };
@@ -66,15 +84,24 @@ export function useTheme() {
   const darkMode = useSyncExternalStore(subscribe, readClientTheme, () => false);
 
   useEffect(() => {
-    applyThemeToDom(darkMode);
+    applyThemeToDom(darkMode, getStoredTheme());
   }, [darkMode]);
 
   const toggleDarkMode = useCallback(() => {
-    const next = !readClientTheme();
+    const nextDark = !readClientTheme();
+    const targetScheme = nextDark ? "dark" : "light";
+    const systemDark = getSystemDark();
+    // Two-state toggle: if the target matches the current OS preference,
+    // remove the stored override so the site returns to following the system.
+    const nextStored = nextDark === systemDark ? null : targetScheme;
     try {
-      window.localStorage.setItem(STORAGE_KEY, next ? "dark" : "light");
+      if (nextStored) {
+        window.localStorage.setItem(STORAGE_KEY, nextStored);
+      } else {
+        window.localStorage.removeItem(STORAGE_KEY);
+      }
     } catch { /* ignore storage errors */ }
-    applyThemeToDom(next);
+    applyThemeToDom(nextDark, nextStored);
     notifyListeners();
   }, []);
 

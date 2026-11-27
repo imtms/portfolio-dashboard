@@ -1,23 +1,23 @@
 import styles from "../../styles/Dashboard.module.css";
 
-function SortIcon({ active, order }) {
+function SortIcon() {
   return (
     <svg className={styles.sortIcon} viewBox="0 0 12 12" fill="none" aria-hidden="true">
       <path
+        className={styles.sortArrowAsc}
         d="m3 4.8 3-2.8 3 2.8"
-        stroke={active && order === "asc" ? "var(--accent)" : "currentColor"}
-        strokeWidth={active && order === "asc" ? "1.6" : "1.2"}
+        stroke="currentColor"
+        strokeWidth="1.4"
         strokeLinecap="round"
         strokeLinejoin="round"
-        opacity={active && order === "asc" ? 1 : 0.28}
       />
       <path
+        className={styles.sortArrowDesc}
         d="m9 7.2-3 2.8-3-2.8"
-        stroke={active && order === "desc" ? "var(--accent)" : "currentColor"}
-        strokeWidth={active && order === "desc" ? "1.6" : "1.2"}
+        stroke="currentColor"
+        strokeWidth="1.4"
         strokeLinecap="round"
         strokeLinejoin="round"
-        opacity={active && order === "desc" ? 1 : 0.28}
       />
     </svg>
   );
@@ -25,18 +25,21 @@ function SortIcon({ active, order }) {
 
 export default function SortHeader({ column, children, numeric = false, sortBy, sortOrder, onSort }) {
   const isActive = sortBy === column;
+  const ariaSort = isActive ? (sortOrder === "asc" ? "ascending" : "descending") : undefined;
+
   return (
     <th
+      scope="col"
       className={numeric ? styles.numeric : undefined}
-      aria-sort={isActive ? (sortOrder === "asc" ? "ascending" : "descending") : "none"}
+      aria-sort={ariaSort}
     >
       <button
         type="button"
-        className={`${styles.sortButton} ${isActive ? styles.sortButtonActive : ""}`}
+        className={`${styles.sortButton} ${numeric ? styles.sortButtonNumeric : ""}`}
         onClick={() => onSort(column)}
       >
         {children}
-        <SortIcon active={isActive} order={sortOrder} />
+        <SortIcon />
       </button>
     </th>
   );

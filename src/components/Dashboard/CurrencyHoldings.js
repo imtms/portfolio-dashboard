@@ -1,8 +1,15 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
 import { echarts } from "../../lib/echarts";
 import { getChartTheme, getMonoFontFamily } from "../../lib/chartTheme";
 import SortHeader from "./TableSortHeader";
 import styles from "../../styles/Dashboard.module.css";
+
+const collator = new Intl.Collator(undefined, { numeric: true, sensitivity: "base" });
+
+const COLUMN_LABELS = {
+  currency: "Currency",
+  percentage: "Weight",
+};
 
 function EmptyState() {
   return (
@@ -19,15 +26,17 @@ function EmptyState() {
 export default function CurrencyHoldings({ holdings, darkMode }) {
   const chartRef = useRef(null);
   const chartInstance = useRef(null);
+  const captionId = useId();
   const [sortBy, setSortBy] = useState("percentage");
   const [sortOrder, setSortOrder] = useState("desc");
+  const [sortAnnouncement, setSortAnnouncement] = useState("");
   const [activeCurrency, setActiveCurrency] = useState(null);
 
   const hasHoldings = holdings.length > 0;
   const theme = useMemo(() => getChartTheme(darkMode), [darkMode]);
 
-  const chartData = useMemo(() => [...holdings]
-    .sort((a, b) => b.percentage - a.percentage)
+  const chartData = useMemo(() => holdings
+    .toSorted((a, b) => b.percentage - a.percentage)
     .map((holding, index) => ({
       value: Number(holding.percentage.toFixed(2)),
       name: holding.currency,
@@ -60,7 +69,9 @@ export default function CurrencyHoldings({ holdings, darkMode }) {
 
   const option = useMemo(() => {
     const monoFont = getMonoFontFamily();
+    const reduceMotion = typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     return {
+      animation: !reduceMotion,
       animationDuration: 360,
       animationDurationUpdate: 260,
       tooltip: {
@@ -147,19 +158,27 @@ export default function CurrencyHoldings({ holdings, darkMode }) {
     }
   }, [indexByCurrency]);
 
-  const sortedHoldings = useMemo(() => [...holdings].sort((a, b) => {
-    const valA = typeof a[sortBy] === "string" ? a[sortBy].toUpperCase() : a[sortBy];
-    const valB = typeof b[sortBy] === "string" ? b[sortBy].toUpperCase() : b[sortBy];
-    if (valA === valB) return 0;
-    return (valA < valB ? -1 : 1) * (sortOrder === "asc" ? 1 : -1);
-  }), [holdings, sortBy, sortOrder]);
+  const sortedHoldings = useMemo(() => {
+    const factor = sortOrder === "asc" ? 1 : -1;
+    return holdings.toSorted((a, b) => {
+      const valA = a[sortBy];
+      const valB = b[sortBy];
+      if (typeof valA === "string" || typeof valB === "string") {
+        return factor * collator.compare(String(valA ?? ""), String(valB ?? ""));
+      }
+      return factor * (Number(valA) - Number(valB));
+    });
+  }, [holdings, sortBy, sortOrder]);
 
   const handleSort = (column) => {
-    if (sortBy === column) setSortOrder((order) => (order === "asc" ? "desc" : "asc"));
-    else {
-      setSortBy(column);
-      setSortOrder("desc");
-    }
+    const nextOrder = sortBy === column
+      ? (sortOrder === "asc" ? "desc" : "asc")
+      : (column === "currency" ? "asc" : "desc");
+    setSortBy(column);
+    setSortOrder(nextOrder);
+    const label = COLUMN_LABELS[column] || column;
+    const direction = nextOrder === "asc" ? "ascending" : "descending";
+    setSortAnnouncement(`Sorted by ${label}, ${direction}, ${sortedHoldings.length} rows`);
   };
 
   if (!hasHoldings) return <EmptyState />;
@@ -174,13 +193,13 @@ export default function CurrencyHoldings({ holdings, darkMode }) {
       </div>
 
       <div className={styles.holdingsLayout}>
-        <section className={styles.allocationPanel}>
+        <section className={styles.allocationPanel} aria-label="Exposure breakdown">
           <div className={styles.subPanelHeader}>
             <h3 className={styles.subPanelTitle}>Exposure breakdown</h3>
             <span className={styles.sectionMeta}>100% total</span>
           </div>
           <div className={styles.donutStage}>
-            <div ref={chartRef} className={styles.donutContainer} />
+            <div ref={chartRef} className={styles.donutContainer} aria-hidden="true" />
             <div className={styles.donutCenter} aria-hidden="true">
               <strong className={styles.donutCenterValue}>{activeCenter.primary}</strong>
               <span className={styles.donutCenterLabel}>
@@ -191,18 +210,21 @@ export default function CurrencyHoldings({ holdings, darkMode }) {
           </div>
           <div className={styles.chartLegend}>
             {chartData.map((item) => (
-              <div
+              <button
+                type="button"
                 className={`${styles.legendItem} ${activeCurrency === item.name ? styles.legendItemActive : ""}`}
                 key={item.name}
                 onMouseEnter={() => highlightSlice(item.name)}
                 onMouseLeave={() => clearHighlight(item.name)}
+                onFocus={() => highlightSlice(item.name)}
+                onBlur={() => clearHighlight(item.name)}
               >
                 <span className={styles.legendName}>
-                  <span className={styles.legendDot} style={{ background: item.itemStyle.color }} />
+                  <span className={styles.legendDot} style={{ background: item.itemStyle.color }} aria-hidden="true" />
                   <span className={styles.legendText}>{item.name}</span>
                 </span>
                 <span className={styles.legendValue}>{item.value.toFixed(2)}%</span>
-              </div>
+              </button>
             ))}
           </div>
         </section>
@@ -212,8 +234,10 @@ export default function CurrencyHoldings({ holdings, darkMode }) {
             <h3 className={styles.subPanelTitle}>Currency ledger</h3>
             <span className={styles.sectionMeta}>Sortable</span>
           </div>
-          <div className={styles.tableContainer}>
+          <div role="status" className="visually-hidden">{sortAnnouncement}</div>
+          <div className={styles.tableContainer} tabIndex={0} role="region" aria-labelledby={captionId}>
             <table className={`${styles.customTable} ${styles.compactTable}`}>
+              <caption id={captionId} className="visually-hidden">Portfolio currency exposure weights</caption>
               <thead>
                 <tr>
                   <SortHeader column="currency" sortBy={sortBy} sortOrder={sortOrder} onSort={handleSort}>Currency</SortHeader>
@@ -230,15 +254,15 @@ export default function CurrencyHoldings({ holdings, darkMode }) {
                       onMouseEnter={() => highlightSlice(holding.currency, true)}
                       onMouseLeave={() => clearHighlight(holding.currency)}
                     >
-                      <td className={styles.symbolCell}>
+                      <th scope="row" className={styles.symbolCell}>
                         <span className={styles.currencyBadge}>
                           <span className={styles.currencyDot} style={{ background: color }} aria-hidden="true" />
                           {holding.currency}
                         </span>
-                      </td>
+                      </th>
                       <td className={`${styles.numeric} ${styles.numberCell}`}>
                         <span className={styles.allocationCell}>
-                          <span className={styles.allocationTrack}>
+                          <span className={styles.allocationTrack} aria-hidden="true">
                             <span className={styles.allocationFill} style={{ width: `${Math.max(4, Math.min(100, holding.percentage))}%`, background: color }} />
                           </span>
                           <span className={styles.allocationValue}>{holding.percentage.toFixed(2)}%</span>

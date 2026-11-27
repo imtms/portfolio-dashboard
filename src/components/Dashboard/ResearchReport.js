@@ -19,8 +19,13 @@ export default function ResearchReport() {
       h2: ({ children, ...props }) => {
         const text = extractTextFromNode(children).trim();
         const id = idByText.get(text) || slugifyHeading(text);
-        return <h2 id={id} {...props}>{children}</h2>;
+        return <h2 id={id} tabIndex={-1} {...props}>{children}</h2>;
       },
+      table: ({ children, ...props }) => (
+        <div className={styles.tableScroll} tabIndex={0} role="region" aria-label="Research data table">
+          <table {...props}>{children}</table>
+        </div>
+      ),
     };
   }, [headings]);
 
@@ -52,7 +57,7 @@ export default function ResearchReport() {
       <header className={styles.researchHeader}>
         <div>
           <span className={styles.panelLabel}>Research note / 21 Nov 2026</span>
-          <h1 className={styles.researchTitle}>Portfolio weekly research</h1>
+          <h2 className={styles.researchTitle}>Portfolio weekly research</h2>
           <p className={styles.researchDescription}>16–21 Nov: earnings, regulatory developments, macro shifts, and their impact on current holdings.</p>
         </div>
         <div className={styles.researchMeta}>
@@ -82,21 +87,22 @@ export default function ResearchReport() {
         </div>
 
         {headings.length > 0 && (
-          <aside className={styles.researchToc} aria-label="Report sections">
+          <nav className={styles.researchToc} aria-label="On this report">
             <p className={styles.tocTitle}>On this report</p>
             <ul className={styles.tocList}>
               {headings.map((item) => (
                 <li key={item.id}>
                   <a
-                    className={`${styles.tocLink} ${activeId === item.id ? styles.tocLinkActive : ""}`}
+                    className={styles.tocLink}
                     href={`#${item.id}`}
+                    aria-current={activeId === item.id ? "true" : undefined}
                   >
                     {item.text}
                   </a>
                 </li>
               ))}
             </ul>
-          </aside>
+          </nav>
         )}
       </div>
     </article>

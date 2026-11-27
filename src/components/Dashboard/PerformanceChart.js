@@ -89,11 +89,13 @@ export default function PerformanceChart({ data, darkMode }) {
 
   const option = useMemo(() => {
     const monoFont = getMonoFontFamily();
+    const reduceMotion = typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const crossesZero = Number.isFinite(stats.low) && Number.isFinite(stats.high) && stats.low < 0 && stats.high > 0;
     const lastPoint = visibleData.at(-1);
     const lastValue = lastPoint ? Number(lastPoint.netPerformanceInPercentage.toFixed(2)) : null;
 
     return {
+      animation: !reduceMotion,
       animationDuration: 360,
       animationDurationUpdate: 260,
       animationEasing: "cubicOut",
@@ -246,6 +248,8 @@ export default function PerformanceChart({ data, darkMode }) {
       ? styles.positive
       : styles.negative;
 
+  const chartSummaryLabel = `Cumulative return chart from ${visibleData[0]?.date} to ${visibleData.at(-1)?.date}, range high ${formatPct(stats.high)}, range low ${formatPct(stats.low)}, range delta ${formatPct(stats.delta)}`;
+
   return (
     <div>
       <div className={styles.panelHeader}>
@@ -296,7 +300,7 @@ export default function PerformanceChart({ data, darkMode }) {
             </span>
           </div>
         </div>
-        <div ref={chartRef} className={styles.chartContainer} />
+        <div ref={chartRef} className={styles.chartContainer} role="img" aria-label={chartSummaryLabel} />
       </div>
     </div>
   );

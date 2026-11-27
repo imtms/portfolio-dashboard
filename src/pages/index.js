@@ -56,7 +56,7 @@ export default function Home() {
     const drawdownFromPeak = Number.isFinite(currentPerformance) && Number.isFinite(peak)
       ? currentPerformance - peak
       : NaN;
-    const topHolding = [...stockHoldings].sort((a, b) => b.allocationInPercentage - a.allocationInPercentage)[0];
+    const topHolding = stockHoldings.toSorted((a, b) => b.allocationInPercentage - a.allocationInPercentage)[0];
     return { currentPerformance, peak, drawdownFromPeak, topHolding };
   }, [chart, stockHoldings]);
 
@@ -64,6 +64,13 @@ export default function Home() {
     stockHoldings: stockHoldings.length || undefined,
     currencyHoldings: currencyHoldings.length || undefined,
     research: "21 Nov",
+  };
+
+  const selectTab = (index, focusTab = false) => {
+    setActiveTab(tabs[index].id);
+    const node = tabRefs.current[index];
+    if (focusTab) node?.focus();
+    node?.scrollIntoView?.({ block: "nearest", inline: "nearest", container: "nearest" });
   };
 
   const handleTabKeyDown = (event, index) => {
@@ -74,8 +81,7 @@ export default function Home() {
     else if (event.key === "End") nextIndex = tabs.length - 1;
     if (nextIndex === null) return;
     event.preventDefault();
-    setActiveTab(tabs[nextIndex].id);
-    tabRefs.current[nextIndex]?.focus();
+    selectTab(nextIndex, true);
   };
 
   const renderContent = () => {
@@ -126,10 +132,14 @@ export default function Home() {
       />
 
       <main className={styles.page}>
+        <h1 id="main-content" tabIndex={-1} className="visually-hidden">
+          TMs Portfolio Wealth Console
+        </h1>
+
         {error && <p className={styles.dataError} role="alert">{error}{updatedAt && " Showing the last loaded data."}</p>}
 
         <section className={styles.dashboardShell}>
-          <div className={styles.summaryStrip} aria-label="Portfolio summary">
+          <div className={styles.summaryStrip} role="region" aria-label="Portfolio summary">
             <div className={`${styles.summaryItem} ${netHeroClass}`}>
               <div className={styles.summaryHeader}>
                 <span className={styles.summaryLabel}>Net return</span>
@@ -210,12 +220,13 @@ export default function Home() {
                 <button
                   type="button"
                   key={tab.id}
+                  id={`tab-${tab.id}`}
                   ref={(node) => { tabRefs.current[index] = node; }}
                   role="tab"
                   aria-selected={activeTab === tab.id}
                   tabIndex={activeTab === tab.id ? 0 : -1}
-                  className={`${styles.tabButton} ${activeTab === tab.id ? styles.tabButtonActive : ""}`}
-                  onClick={() => setActiveTab(tab.id)}
+                  className={styles.tabButton}
+                  onClick={() => selectTab(index)}
                   onKeyDown={(event) => handleTabKeyDown(event, index)}
                 >
                   <TabIcon type={tab.icon} />
@@ -227,7 +238,14 @@ export default function Home() {
             <span className={styles.sectionMeta}>Base currency normalized</span>
           </div>
 
-          <div className={styles.contentArea} role="tabpanel">{renderContent()}</div>
+          <div
+            className={styles.contentArea}
+            role="tabpanel"
+            aria-labelledby={`tab-${activeTab}`}
+            tabIndex={0}
+          >
+            {renderContent()}
+          </div>
         </section>
       </main>
     </>

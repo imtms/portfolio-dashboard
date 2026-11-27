@@ -1,36 +1,67 @@
 .topbar {
   position: sticky;
-  top: 0;
+  inset-block-start: 0;
   z-index: 40;
-  height: var(--navbar-height);
-  border-bottom: 1px solid var(--border);
-  background: color-mix(in srgb, var(--surface) 88%, transparent);
+  min-block-size: var(--navbar-height);
+  border-block-end: 1px solid var(--border);
+  background: color-mix(in oklab, var(--surface) 88%, transparent);
   box-shadow: var(--shadow-xs);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
 }
 
+/* Accessible skip link: hidden until focused or active */
+.skipLink:where(:not(:focus-within, :active)) {
+  position: absolute;
+  clip-path: inset(50%);
+  overflow: hidden;
+  inline-size: 1px;
+  block-size: 1px;
+  margin: -1px;
+  padding: 0;
+  border: 0;
+  white-space: nowrap;
+}
+
+.skipLink:focus-visible {
+  position: fixed;
+  inset-block-start: 0.75rem;
+  inset-inline-start: 0.75rem;
+  z-index: 100;
+  padding: 0.5rem 0.875rem;
+  border: 1px solid var(--accent-border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--foreground);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  box-shadow: var(--shadow-sm);
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
 .topbarInner {
-  width: min(100% - 48px, 1320px);
-  height: 100%;
-  margin: 0 auto;
+  inline-size: min(100% - 3rem, 1320px);
+  min-block-size: var(--navbar-height);
+  margin-inline: auto;
   display: flex;
   align-items: center;
-  gap: 32px;
+  gap: 2rem;
 }
 
 .brand {
   display: inline-flex;
   align-items: center;
-  gap: 10px;
+  gap: 0.625rem;
   white-space: nowrap;
   flex-shrink: 0;
+  border-radius: var(--radius-xs);
 }
 
 .brandMark {
   position: relative;
-  width: 26px;
-  height: 26px;
+  inline-size: 26px;
+  block-size: 26px;
   border-radius: var(--radius-sm);
   border: 1px solid var(--border-strong);
   background: linear-gradient(180deg, var(--surface) 0%, var(--surface-muted) 100%);
@@ -39,7 +70,7 @@
   align-items: flex-end;
   justify-content: center;
   gap: 2.5px;
-  padding-bottom: 5px;
+  padding-block-end: 5px;
   transition: border-color var(--duration-fast) var(--ease-out);
 }
 
@@ -49,23 +80,23 @@
 
 .brandMark span {
   display: block;
-  width: 3px;
+  inline-size: 3px;
   border-radius: 1px 1px 0 0;
   background: var(--foreground);
 }
 
 .brandMark span:nth-child(1) {
-  height: 5px;
+  block-size: 5px;
   opacity: 0.38;
 }
 
 .brandMark span:nth-child(2) {
-  height: 9px;
+  block-size: 9px;
   opacity: 0.7;
 }
 
 .brandMark span:nth-child(3) {
-  height: 14px;
+  block-size: 14px;
   background: var(--accent);
 }
 
@@ -75,37 +106,38 @@
 }
 
 .brandText b {
-  font-size: 13.5px;
+  font-size: 0.84375rem;
   font-weight: 600;
   letter-spacing: -0.02em;
   line-height: 1.2;
 }
 
 .brandText small {
-  margin-top: 1px;
+  margin-block-start: 1px;
   font-family: var(--font-mono);
-  font-size: 9.5px;
+  font-size: 0.625rem;
   color: var(--subtle-foreground);
   text-transform: uppercase;
   letter-spacing: 0.11em;
 }
 
 .productNav {
-  height: 100%;
+  align-self: stretch;
   display: flex;
   align-items: center;
-  gap: 22px;
-  margin-right: auto;
+  gap: 1.375rem;
+  margin-inline-end: auto;
 }
 
 .productNav a {
   position: relative;
-  height: 100%;
+  align-self: stretch;
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: 0.25rem;
+  min-block-size: 2.25rem;
   color: var(--muted-foreground);
-  font-size: 13px;
+  font-size: 0.8125rem;
   font-weight: 500;
   white-space: nowrap;
   transition: color var(--duration-fast) var(--ease-out);
@@ -115,37 +147,35 @@
   color: var(--foreground);
 }
 
-.productNav .activeNav {
+.productNav a[aria-current="page"] {
   color: var(--foreground);
   font-weight: 600;
 }
 
-.productNav .activeNav::after {
+/* Draw indicator with border instead of background so Forced Colors Mode preserves it */
+.productNav a[aria-current="page"]::after {
   content: "";
   position: absolute;
-  right: 0;
-  bottom: -1px;
-  left: 0;
-  height: 2px;
-  border-radius: 2px 2px 0 0;
-  background: var(--accent);
+  inset-inline: 0;
+  inset-block-end: -1px;
+  border-block-end: 2px solid var(--accent);
 }
 
 .externalArrow {
-  font-size: 10px;
-  opacity: 0.45;
+  font-size: 0.625rem;
+  opacity: 0.48;
   transition: opacity var(--duration-fast) var(--ease-out);
 }
 
 .productNav a:hover .externalArrow {
-  opacity: 0.85;
+  opacity: 0.88;
 }
 
 .navActions {
-  margin-left: auto;
+  margin-inline-start: auto;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 0.5rem;
   flex-shrink: 0;
 }
 
@@ -157,36 +187,101 @@
 
 .accountIcon {
   position: absolute;
-  left: 9px;
+  inset-inline-start: 9px;
   z-index: 1;
-  width: 13px;
-  height: 13px;
+  inline-size: 13px;
+  block-size: 13px;
   color: var(--subtle-foreground);
   pointer-events: none;
 }
 
 .accountSelect {
-  height: 32px;
-  max-width: 200px;
-  padding: 0 28px 0 28px;
+  min-block-size: 2rem;
+  max-inline-size: 12.5rem;
+  padding-block: 0.25rem;
+  padding-inline: 1.75rem 1.75rem;
   border: 1px solid var(--border-strong);
   border-radius: var(--radius-sm);
   appearance: none;
   background-color: var(--surface);
-  background-image: linear-gradient(45deg, transparent 50%, var(--muted-foreground) 50%), linear-gradient(135deg, var(--muted-foreground) 50%, transparent 50%);
-  background-position: calc(100% - 13px) 13px, calc(100% - 9px) 13px;
+  background-image:
+    linear-gradient(45deg, transparent 50%, var(--muted-foreground) 50%),
+    linear-gradient(135deg, var(--muted-foreground) 50%, transparent 50%);
+  background-position: calc(100% - 13px) 50%, calc(100% - 9px) 50%;
   background-repeat: no-repeat;
   background-size: 4px 4px, 4px 4px;
   color: var(--foreground);
-  font-size: 12px;
+  font-size: 0.75rem;
   font-weight: 500;
-  outline: none;
   cursor: pointer;
-  transition: border-color var(--duration-fast) var(--ease-out), background-color var(--duration-fast) var(--ease-out);
+  transition:
+    border-color var(--duration-fast) var(--ease-out),
+    background-color var(--duration-fast) var(--ease-out),
+    box-shadow var(--duration-fast) var(--ease-out);
 }
 
-.accountSelect:hover,
-.iconButton:hover {
+/* Progressive enhancement: Branded Select Styling via appearance: base-select */
+@supports (appearance: base-select) {
+  .accountSelect,
+  .accountSelect::picker(select) {
+    appearance: base-select;
+  }
+
+  .accountSelect {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding-inline: 1.75rem 0.625rem;
+    background-image: none;
+  }
+
+  .accountSelect::picker-icon {
+    color: var(--muted-foreground);
+    font-size: 0.65rem;
+    margin-inline-start: auto;
+  }
+
+  .accountSelect::picker(select) {
+    margin-block-start: 4px;
+    padding: 4px;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-sm);
+    background-color: var(--surface-raised);
+    color: var(--foreground);
+    box-shadow: var(--shadow-sm);
+    font-family: var(--font-sans);
+    font-size: 0.78125rem;
+  }
+
+  .accountSelect option {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.4375rem 0.625rem;
+    border-radius: var(--radius-xs);
+    color: var(--foreground);
+    cursor: pointer;
+  }
+
+  .accountSelect option:hover,
+  .accountSelect option:focus-visible {
+    background-color: var(--surface-muted);
+  }
+
+  .accountSelect option:checked {
+    background-color: var(--accent-soft);
+    color: var(--accent-strong);
+    font-weight: 600;
+  }
+
+  .accountSelect option::checkmark {
+    color: var(--accent);
+    font-size: 0.75rem;
+  }
+}
+
+.accountSelect:hover:not(:disabled),
+.iconButton:hover:not(:disabled) {
   border-color: var(--accent-border);
   background-color: var(--surface-subtle);
   box-shadow: var(--shadow-xs);
@@ -196,38 +291,29 @@
 .iconButton:focus-visible,
 .productNav a:focus-visible,
 .brand:focus-visible {
-  outline: 1.5px solid var(--accent);
+  outline: 2px solid var(--accent);
   outline-offset: 2px;
-}
-
-.visuallyHidden {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip: rect(0 0 0 0);
-  white-space: nowrap;
 }
 
 .statusText {
   display: inline-flex;
   align-items: center;
-  gap: 7px;
-  height: 26px;
-  padding: 0 10px;
+  gap: 0.4375rem;
+  min-block-size: 1.625rem;
+  padding: 0.125rem 0.625rem;
   border: 1px solid var(--border);
   border-radius: 999px;
   background: var(--surface-subtle);
   color: var(--muted-foreground);
   font-family: var(--font-mono);
-  font-size: 10.5px;
+  font-size: 0.65625rem;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
 
 .statusDot {
-  width: 6px;
-  height: 6px;
+  inline-size: 6px;
+  block-size: 6px;
   border-radius: 999px;
   background: var(--positive);
   box-shadow: 0 0 0 3px var(--positive-soft);
@@ -242,24 +328,28 @@
 .iconButton {
   display: inline-grid;
   place-items: center;
-  width: 32px;
-  height: 32px;
-  padding: 6px;
+  min-inline-size: 2rem;
+  min-block-size: 2rem;
+  padding: 0.375rem;
   border: 1px solid var(--border-strong);
   border-radius: var(--radius-sm);
   background: var(--surface);
   color: var(--muted-foreground);
   cursor: pointer;
-  transition: color var(--duration-fast) var(--ease-out), border-color var(--duration-fast) var(--ease-out), background-color var(--duration-fast) var(--ease-out);
+  transition:
+    color var(--duration-fast) var(--ease-out),
+    border-color var(--duration-fast) var(--ease-out),
+    background-color var(--duration-fast) var(--ease-out),
+    box-shadow var(--duration-fast) var(--ease-out);
 }
 
-.iconButton:hover {
+.iconButton:hover:not(:disabled) {
   color: var(--foreground);
 }
 
 .iconButton svg {
-  width: 15px;
-  height: 15px;
+  inline-size: 15px;
+  block-size: 15px;
   fill: none;
   stroke: currentColor;
   stroke-width: 1.7;
@@ -274,6 +364,16 @@
   display: block;
 }
 
+@media (prefers-color-scheme: dark) {
+  :global(:root:not([data-theme="light"])) .themeIconSun {
+    display: block;
+  }
+
+  :global(:root:not([data-theme="light"])) .themeIconMoon {
+    display: none;
+  }
+}
+
 :global([data-theme="dark"]) .themeIconSun {
   display: block;
 }
@@ -284,25 +384,26 @@
 
 .refreshButton {
   display: inline-flex;
-  width: auto;
+  inline-size: auto;
   align-items: center;
   justify-content: center;
-  gap: 6px;
-  padding: 0 11px;
+  gap: 0.375rem;
+  padding-block: 0.25rem;
+  padding-inline: 0.6875rem;
 }
 
 .refreshButton svg {
-  width: 13px;
-  height: 13px;
+  inline-size: 13px;
+  block-size: 13px;
   flex-shrink: 0;
 }
 
 .refreshLabel {
-  min-width: 56px;
+  min-inline-size: 3.5rem;
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: 0.6875rem;
   font-weight: 500;
-  text-align: left;
+  text-align: start;
   color: var(--foreground);
 }
 
@@ -311,13 +412,39 @@
   opacity: 0.55;
 }
 
-.refreshing {
-  animation: refreshSpin 0.9s linear infinite;
+@media (prefers-reduced-motion: no-preference) {
+  .refreshing {
+    animation: refreshSpin 0.9s linear infinite;
+  }
 }
 
 @keyframes refreshSpin {
   to {
-    transform: rotate(360deg);
+    rotate: 1turn;
+  }
+}
+
+@keyframes navFadeStart {
+  to {
+    --fade-start: var(--fade-size);
+  }
+}
+
+@keyframes navFadeEnd {
+  from {
+    --fade-end: var(--fade-size);
+  }
+}
+
+@media (forced-colors: active) {
+  .statusDot {
+    background: CanvasText;
+    border: 1px solid CanvasText;
+    box-shadow: none;
+  }
+
+  .productNav a[aria-current="page"]::after {
+    border-block-end-color: Highlight;
   }
 }
 
@@ -327,37 +454,51 @@
   }
 
   .topbarInner {
-    gap: 20px;
+    gap: 1.25rem;
   }
 }
 
 @media (max-width: 900px) {
   .topbar {
-    height: auto;
+    min-block-size: auto;
   }
 
   .topbarInner {
-    min-height: 54px;
-    height: auto;
-    gap: 0 16px;
+    min-block-size: 54px;
+    gap: 0 1rem;
     flex-wrap: wrap;
   }
 
   .brand {
-    min-height: 54px;
+    min-block-size: 54px;
   }
 
   .productNav {
     order: 3;
-    width: 100%;
-    height: 40px;
-    gap: 18px;
-    border-top: 1px solid var(--border);
+    inline-size: 100%;
+    min-block-size: 40px;
+    gap: 1.125rem;
+    border-block-start: 1px solid var(--border);
     overflow-x: auto;
+    scrollbar-width: none;
+    --fade-size: 2rem;
+    scroll-padding-inline: var(--fade-size);
+  }
+
+  @supports (animation-timeline: scroll()) {
+    .productNav {
+      mask:
+        linear-gradient(black, black) no-clip subtract,
+        linear-gradient(to right, black, transparent) 0 0 / var(--fade-start) 100% no-repeat no-clip,
+        linear-gradient(to right, transparent, black) 100% 0 / var(--fade-end) 100% no-repeat no-clip;
+      animation: navFadeStart linear both, navFadeEnd linear both;
+      animation-timeline: scroll(self inline);
+      animation-range: 0 var(--fade-size), calc(100% - var(--fade-size)) 100%;
+    }
   }
 
   .navActions {
-    min-height: 54px;
+    min-block-size: 54px;
   }
 
   .refreshLabel {
@@ -365,14 +506,14 @@
   }
 
   .refreshButton {
-    width: 32px;
-    padding: 0;
+    min-inline-size: 2rem;
+    padding-inline: 0.375rem;
   }
 }
 
 @media (max-width: 680px) {
   .topbarInner {
-    width: min(100% - 32px, 1320px);
+    inline-size: min(100% - 2rem, 1320px);
   }
 
   .brandText small {
@@ -380,32 +521,38 @@
   }
 
   .accountSelect {
-    width: 120px;
-    padding: 0 24px 0 26px;
-    font-size: 11.5px;
+    inline-size: 7.5rem;
+    padding-inline: 1.625rem 1.5rem;
+    font-size: 0.71875rem;
+  }
+
+  @supports (appearance: base-select) {
+    .accountSelect {
+      padding-inline: 1.625rem 0.5rem;
+    }
   }
 
   .productNav a {
-    font-size: 12.5px;
+    font-size: 0.78125rem;
   }
 }
 
 @media (max-width: 440px) {
   .topbarInner {
-    width: min(100% - 24px, 1320px);
-    gap: 0 6px;
+    inline-size: min(100% - 1.5rem, 1320px);
+    gap: 0 0.375rem;
   }
 
   .brand {
-    gap: 7px;
+    gap: 0.4375rem;
   }
 
   .brandText b {
-    font-size: 12.5px;
+    font-size: 0.78125rem;
   }
 
   .navActions {
-    gap: 6px;
+    gap: 0.375rem;
   }
 
   .accountIcon {
@@ -413,22 +560,42 @@
   }
 
   .accountSelect {
-    width: 112px;
-    padding: 0 20px 0 9px;
-    background-position: calc(100% - 10px) 13px, calc(100% - 6px) 13px;
-    font-size: 11.5px;
+    inline-size: 7rem;
+    padding-inline: 0.5625rem 1.25rem;
+    background-position: calc(100% - 10px) 50%, calc(100% - 6px) 50%;
+    font-size: 0.71875rem;
+  }
+
+  @supports (appearance: base-select) {
+    .accountSelect {
+      padding-inline: 0.5625rem 0.4375rem;
+    }
   }
 
   .iconButton {
-    width: 28px;
-    height: 28px;
+    min-inline-size: 1.875rem;
+    min-block-size: 1.875rem;
   }
 }
 
 @media (max-width: 360px) {
   .accountSelect {
-    width: 94px;
-    padding: 0 18px 0 7px;
-    font-size: 11px;
+    inline-size: 5.875rem;
+    padding-inline: 0.4375rem 1.125rem;
+    font-size: 0.6875rem;
+  }
+
+  @supports (appearance: base-select) {
+    .accountSelect {
+      padding-inline: 0.4375rem 0.375rem;
+    }
+  }
+}
+
+@media (pointer: coarse) {
+  .productNav a,
+  .iconButton,
+  .accountSelect {
+    min-block-size: 2.375rem;
   }
 }

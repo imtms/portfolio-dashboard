@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useId, useMemo, useState } from "react";
 import Link from "next/link";
 import ArticleShell from "../../components/Articles/ArticleShell";
 import SeoHead from "../../components/Common/SeoHead";
@@ -10,6 +10,7 @@ function formatDate(date) {
 }
 
 export default function Articles({ articles }) {
+  const searchId = useId();
   const [query, setQuery] = useState("");
   const [activeTag, setActiveTag] = useState("");
 
@@ -44,7 +45,7 @@ export default function Articles({ articles }) {
         <section className={styles.hero}>
           <div>
             <span className={styles.eyebrow}>INVESTMENT NOTEBOOK</span>
-            <h1>分析文章</h1>
+            <h1 id="main-content" tabIndex={-1}>分析文章</h1>
             <p>保存判断形成的过程。按发布时间倒序整理财报复盘、组合观察与长期研究。</p>
           </div>
           <div className={styles.archiveStat}>
@@ -57,16 +58,17 @@ export default function Articles({ articles }) {
           <section className={styles.filterBar} aria-label="文章筛选">
             <div className={styles.filterTop}>
               <div className={styles.searchWrap}>
+                <label htmlFor={searchId} className="visually-hidden">搜索分析文章</label>
                 <svg className={styles.searchIcon} viewBox="0 0 24 24" fill="none" aria-hidden="true">
                   <circle cx="11" cy="11" r="7" stroke="currentColor" strokeWidth="1.8" />
                   <path d="m20 20-3.5-3.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
                 </svg>
                 <input
+                  id={searchId}
                   type="search"
                   value={query}
                   onChange={(event) => setQuery(event.target.value)}
                   placeholder="搜索标题、标的或关键词..."
-                  aria-label="搜索分析文章"
                   className={styles.searchInput}
                 />
                 {query && (
@@ -75,11 +77,9 @@ export default function Articles({ articles }) {
                   </button>
                 )}
               </div>
-              {isFiltering && (
-                <span className={styles.filterCount}>
-                  匹配 {filteredArticles.length} / {articles.length}
-                </span>
-              )}
+              <span className={styles.filterCount} role="status">
+                {isFiltering ? `匹配 ${filteredArticles.length} / ${articles.length}` : ""}
+              </span>
             </div>
 
             {topTags.length > 0 && (

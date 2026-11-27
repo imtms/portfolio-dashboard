@@ -1,3 +1,4 @@
+import { useId } from "react";
 import Link from "next/link";
 import styles from "../../styles/Navbar.module.css";
 
@@ -37,10 +38,15 @@ export default function Navbar({
   updatedAt,
   isStale = false,
 }) {
+  const accountSelectId = useId();
   const selectedValue = selectedAccountIds.length === 1 ? selectedAccountIds[0] : "all";
+  const skipLabel = activeSection === "articles" ? "跳至正文" : "Skip to main content";
 
   return (
     <header className={styles.topbar}>
+      <a href="#main-content" className={styles.skipLink}>
+        {skipLabel}
+      </a>
       <div className={styles.topbarInner}>
         <Link href="/" className={styles.brand} aria-label="TMs Portfolio home">
           <span className={styles.brandMark} aria-hidden="true">
@@ -54,11 +60,11 @@ export default function Navbar({
           </span>
         </Link>
 
-        <nav className={styles.productNav} aria-label="Product navigation">
-          <Link className={activeSection === "portfolio" ? styles.activeNav : ""} href="/" aria-current={activeSection === "portfolio" ? "page" : undefined}>
+        <nav className={styles.productNav} aria-label="Primary">
+          <Link href="/" aria-current={activeSection === "portfolio" ? "page" : undefined}>
             Portfolio
           </Link>
-          <Link className={activeSection === "articles" ? styles.activeNav : ""} href="/articles" aria-current={activeSection === "articles" ? "page" : undefined}>
+          <Link href="/articles" aria-current={activeSection === "articles" ? "page" : undefined}>
             Articles
           </Link>
           <a href="https://assets.mengshi.de/" target="_blank" rel="noopener noreferrer">
@@ -71,22 +77,25 @@ export default function Navbar({
 
         <div className={styles.navActions}>
           {accounts.length > 0 && onSelectAccounts && (
-            <label className={styles.accountField}>
-              <span className={styles.visuallyHidden}>Account</span>
+            <div className={styles.accountField}>
+              <label htmlFor={accountSelectId} className="visually-hidden">
+                Select portfolio account
+              </label>
               <AccountIcon />
               <select
+                id={accountSelectId}
+                name="account"
                 className={styles.accountSelect}
                 value={selectedValue}
                 onChange={(event) => {
                   const value = event.target.value;
                   onSelectAccounts(value === "all" ? accounts.map((account) => account.id) : [value]);
                 }}
-                aria-label="Select portfolio account"
               >
                 <option value="all">All accounts</option>
                 {accounts.map((account) => <option key={account.id} value={account.id}>{account.name}</option>)}
               </select>
-            </label>
+            </div>
           )}
 
           {onRefresh && (
