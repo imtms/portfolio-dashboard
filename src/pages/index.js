@@ -63,7 +63,7 @@ export default function Home() {
   const tabCounts = {
     stockHoldings: stockHoldings.length || undefined,
     currencyHoldings: currencyHoldings.length || undefined,
-    research: "21 Nov",
+    research: "28 Nov",
   };
 
   const selectTab = (index, focusTab = false) => {
