@@ -58,11 +58,11 @@ export default function ResearchReport() {
         <div>
           <span className={styles.panelLabel}>Research note / 28 Nov 2026</span>
           <h2 className={styles.researchTitle}>Portfolio weekly research</h2>
-          <p className={styles.researchDescription}>23–28 Nov: AI governance, dividends and reinvestment, and how trade policy and economic data affect 26 holdings.</p>
+          <p className={styles.researchDescription}>23–28 Nov: AI governance &amp; credit watch, A-share buybacks &amp; dividends, US/CN/EU macro &amp; Section 301 proposals, and 27 Nov ETF NAVs across 26 holdings.</p>
         </div>
         <div className={styles.researchMeta}>
           <span>Research cut-off</span>
-          <strong>2026-11-28 04:23 UTC</strong>
+          <strong>2026-11-28 15:00 UTC</strong>
         </div>
       </header>
 
